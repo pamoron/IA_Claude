@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CargaEV"
+rootProject.name = "ElectroPerico"
 include(":app")

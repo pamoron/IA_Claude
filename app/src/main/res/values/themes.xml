@@ -5,7 +5,7 @@
   el fondo de ventana para que no haya un destello blanco al arrancar.
 -->
 <resources>
-    <style name="Theme.CargaEV" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.ElectroPerico" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/window_background</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

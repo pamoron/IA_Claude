@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.pamoron.cargaev"
+    namespace = "com.pamoron.electroperico"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.pamoron.cargaev"
+        applicationId = "com.pamoron.electroperico"
         // Android 9 (Pie) en adelante.
         minSdk = 28
         targetSdk = 35

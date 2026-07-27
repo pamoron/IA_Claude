@@ -1,0 +1,56 @@
+name: APK de Electro_Perico
+
+# Compila la aplicación en los servidores de GitHub, que sí traen el SDK de
+# Android, y publica el APK como artefacto descargable.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Pruebas y APK de depuración
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Dar permisos al wrapper
+        run: chmod +x ./gradlew
+
+      - name: Pruebas unitarias
+        run: ./gradlew test --no-daemon --stacktrace
+
+      - name: Publicar el informe de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-de-pruebas
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+      - name: Compilar el APK de depuración
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Renombrar el APK
+        run: |
+          mkdir -p apk
+          cp app/build/outputs/apk/debug/app-debug.apk \
+             "apk/Electro_Perico-debug-${GITHUB_SHA::7}.apk"
+
+      - name: Publicar el APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Electro_Perico-apk
+          path: apk/*.apk
+          if-no-files-found: error
+          retention-days: 30

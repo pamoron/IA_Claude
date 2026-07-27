@@ -5,7 +5,7 @@
 -->
 <resources>
 
-    <string name="app_name">Carga EV</string>
+    <string name="app_name">Electro_Perico</string>
 
     <!-- Unidades -->
     <string name="unidad_euro_kwh">€/kWh</string>
@@ -155,5 +155,11 @@
     <string name="error_perfil_incompleto">Revisa el perfil: la capacidad útil, las potencias y el consumo deben ser mayores que cero.</string>
     <string name="mensaje_guardado">Cambios guardados.</string>
     <string name="nota_fases_siguientes">Próximas fases: comparador de cargadores, historial de recargas y varios perfiles de vehículo.</string>
+
+
+    <!-- Pie de página -->
+    <string name="footer_idea_de">Idea de</string>
+    <string name="footer_by">by</string>
+    <string name="footer_great">GREAT</string>
 
 </resources>

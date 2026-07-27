@@ -1,10 +1,12 @@
-# Carga EV
+# Electro_Perico
 
 Calculadora de coste y tiempo de recarga para coche eléctrico, pensada para usarse
 en treinta segundos estando aparcado junto a un cargador público.
 
 Aplicación Android nativa en **Kotlin + Jetpack Compose + Material 3**, sin conexión
 a internet, sin registro y sin permisos.
+
+> Idea de **GREAT**.
 
 ---
 
@@ -95,7 +97,7 @@ Las pruebas son de JVM: no necesitan emulador ni dispositivo.
 Para una sola clase:
 
 ```bash
-./gradlew testDebugUnitTest --tests "com.pamoron.cargaev.domain.calc.Case1BasicDcSessionTest"
+./gradlew testDebugUnitTest --tests "com.pamoron.electroperico.domain.calc.Case1BasicDcSessionTest"
 ```
 
 El informe HTML queda en `app/build/reports/tests/testDebugUnitTest/index.html`.
@@ -117,6 +119,22 @@ En Android Studio: clic derecho sobre `app/src/test/java` → **Run 'Tests in ..
 | `RatingsTest` | Umbrales de precio y clasificación de cargadores |
 | `MoneyTest` | Redondeo monetario con `BigDecimal` |
 | `FormattersTest` | Formato español de importes, energía, potencia y tiempo |
+
+---
+
+## Descargar el APK ya compilado
+
+Cada `push` dispara el flujo de trabajo **APK de Electro_Perico**
+(`.github/workflows/build-apk.yml`), que ejecuta las pruebas, compila la aplicación
+en los servidores de GitHub y publica el resultado.
+
+1. Entra en la pestaña **Actions** del repositorio.
+2. Abre la ejecución más reciente de *APK de Electro_Perico*.
+3. En **Artifacts**, descarga **`Electro_Perico-apk`** (un ZIP con el `.apk` dentro).
+4. Descomprime, pasa el `.apk` al móvil e instálalo permitiendo
+   *Instalar aplicaciones desconocidas* para la app desde la que lo abras.
+
+Los artefactos se conservan 30 días y requieren estar identificado en GitHub.
 
 ---
 
@@ -179,8 +197,8 @@ UI (Compose)  ──eventos──▶  ViewModel  ──▶  ChargeCalculator (Ko
 ### Estructura de carpetas
 
 ```
-app/src/main/java/com/pamoron/cargaev/
-├─ CargaEvApplication.kt        Punto de entrada, crea el contenedor
+app/src/main/java/com/pamoron/electroperico/
+├─ ElectroPericoApplication.kt        Punto de entrada, crea el contenedor
 ├─ AppContainer.kt              Inyección de dependencias manual
 ├─ MainActivity.kt              Única actividad
 ├─ domain/
@@ -195,9 +213,50 @@ app/src/main/java/com/pamoron/cargaev/
    ├─ theme/                    Colores, tipografía, modo claro y oscuro
    ├─ navigation/               Grafo de navegación
    ├─ common/RatingUi.kt        Dominio → textos, iconos y colores
+   ├─ common/AppFooter.kt       Pie de página común
    ├─ calculator/               Pantalla principal, ViewModel, componentes
    └─ settings/                 Pantalla de ajustes y su ViewModel
 ```
+
+---
+
+## Icono de la aplicación y pie de página
+
+La ilustración de Perico se usa en dos sitios y **cada uno es un solo fichero**:
+
+| Dónde | Fichero | Tamaño |
+|---|---|---|
+| Pie de página de las pantallas | `app/src/main/res/drawable-nodpi/avatar_great.png` | 192 × 192 px, cuadrado |
+| Icono del lanzador | `app/src/main/res/mipmap-*dpi/ic_launcher_foreground.png` | 108 / 162 / 216 / 324 / 432 px |
+
+Ahora mismo los dos llevan un **marcador de posición** (un avatar genérico azul).
+Para poner la ilustración real:
+
+**Opción A, la recomendada — asistente de Android Studio (30 segundos):**
+
+1. Clic derecho en `app/src/main/res` → **New → Image Asset**.
+2. *Icon Type*: **Launcher Icons (Adaptive and Legacy)**.
+3. *Foreground Layer* → *Source Asset* → **Image** → elige el PNG de Perico.
+4. Ajusta *Resize* hasta que la cara quede dentro del círculo de seguridad.
+5. *Background Layer* → *Color* → `#00696D` (o el que prefieras).
+6. **Next → Finish**. El asistente sobrescribe los cinco `ic_launcher_foreground.png`.
+7. Copia además el PNG a `app/src/main/res/drawable-nodpi/avatar_great.png` para el pie.
+
+**Opción B — a mano:** sustituye los seis ficheros de la tabla por la ilustración,
+respetando nombres y tamaños. En el icono del lanzador, la cara debe quedar dentro
+de los 72 dp centrales del lienzo de 108 dp, porque el sistema recorta los bordes
+con distintas formas (círculo, cuadrado redondeado, etc.).
+
+En cuanto hagas `push`, el flujo de trabajo vuelve a compilar el APK con la
+ilustración nueva.
+
+> La capa **monocroma** del icono (iconos con tema de Android 13+) es un vector con
+> un rayo, en `drawable/ic_launcher_monochrome.xml`: una fotografía no funciona en
+> monocromo porque el sistema solo usa la silueta.
+
+El pie de página reproduce el de padelgram.es: *Idea de · avatar · by **GREAT***.
+Los textos están en `strings.xml` (`footer_idea_de`, `footer_by`, `footer_great`) y
+el componente es `ui/common/AppFooter.kt`.
 
 ---
 
