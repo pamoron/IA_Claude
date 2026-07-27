@@ -162,4 +162,40 @@
     <string name="footer_by">by</string>
     <string name="footer_great">GREAT</string>
 
+
+    <!-- Comparador -->
+    <string name="titulo_comparador">Comparador</string>
+    <string name="comparador_intro">Guarda hasta cinco cargadores y compáralos con el mismo coche: %1$s.</string>
+    <string name="comparador_vacio">Todavía no has guardado ninguna opción. Añade los cargadores que estés valorando y verás cuál sale mejor.</string>
+    <string name="comparador_limite">Ya tienes el máximo de %1$d opciones</string>
+    <string name="comparador_resumen_entrada">%1$s · %2$s · %3$s · del %4$d al %5$d %%</string>
+    <string name="comparador_puntuacion">Equilibrio precio-tiempo</string>
+    <string name="comparador_puntuacion_valor">%1$d sobre 100</string>
+    <string name="comparador_opcion_invalida">Faltan datos o no son válidos. Edítala para poder compararla.</string>
+    <string name="comparador_como_se_puntua">Cómo se calcula el equilibrio</string>
+    <string name="comparador_formula">Entre las opciones comparadas, la más barata recibe 100 puntos de precio y la más cara 0; la más rápida recibe 100 puntos de tiempo y la más lenta 0. La puntuación final pesa un 60 % el precio y un 40 % el tiempo. Por eso suele ganar una opción intermedia y no un extremo.</string>
+
+    <string name="orden_mas_barato">Más barato</string>
+    <string name="orden_mas_rapido">Más rápido</string>
+    <string name="orden_mejor_equilibrio">Mejor equilibrio</string>
+
+    <string name="distintivo_mejor_precio">Mejor precio</string>
+    <string name="distintivo_mas_rapido">Más rápido</string>
+    <string name="distintivo_mejor_opcion">Mejor opción general</string>
+
+    <string name="titulo_nueva_opcion">Nueva opción</string>
+    <string name="titulo_editar_opcion">Editar opción</string>
+    <string name="campo_nombre_operador">Nombre del operador o cargador</string>
+
+    <string name="accion_anadir_opcion">Añadir opción</string>
+    <string name="accion_vaciar">Vaciar</string>
+    <string name="accion_editar">Editar</string>
+    <string name="accion_duplicar">Duplicar</string>
+    <string name="accion_eliminar">Eliminar</string>
+    <string name="accion_cancelar">Cancelar</string>
+    <string name="accion_comparador">Abrir el comparador</string>
+    <string name="accion_guardar_en_comparador">Guardar en el comparador</string>
+    <string name="mensaje_guardado_comparador">Guardado en el comparador.</string>
+    <string name="mensaje_comparador_lleno">El comparador ya tiene cinco opciones.</string>
+
 </resources>

@@ -6,21 +6,32 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.pamoron.electroperico.ElectroPericoApplication
+import com.pamoron.electroperico.data.comparator.ComparatorRepository
 import com.pamoron.electroperico.data.settings.AppSettings
 import com.pamoron.electroperico.data.settings.SettingsRepository
 import com.pamoron.electroperico.domain.calc.ChargeCalculator
 import com.pamoron.electroperico.domain.model.CalculationOutcome
+import com.pamoron.electroperico.domain.model.ChargerOption
 import com.pamoron.electroperico.domain.model.CurrentType
+import com.pamoron.electroperico.ui.format.Formatters
+import java.util.UUID
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/** Avisos puntuales de la calculadora. */
+enum class CalculatorMessage {
+    GUARDADO_EN_COMPARADOR,
+    COMPARADOR_LLENO,
+}
 
 /**
  * Lógica de presentación de la calculadora.
@@ -32,6 +43,7 @@ import kotlinx.coroutines.launch
  */
 class CalculatorViewModel(
     private val repository: SettingsRepository,
+    private val comparatorRepository: ComparatorRepository,
 ) : ViewModel() {
 
     private val _inputs = MutableStateFlow(CalculatorInputs())
@@ -39,6 +51,11 @@ class CalculatorViewModel(
 
     /** Evita que la precarga se lance más de una vez al recomponer la pantalla. */
     private var started = false
+
+    private val _message = MutableStateFlow<CalculatorMessage?>(null)
+
+    /** Aviso puntual que la pantalla muestra como mensaje emergente. */
+    val message: StateFlow<CalculatorMessage?> = _message.asStateFlow()
 
     /** Estado observado por la pantalla. */
     val uiState: StateFlow<CalculatorUiState> = combine(
@@ -128,6 +145,42 @@ class CalculatorViewModel(
         _resultsRequested.value = true
     }
 
+    /**
+     * Guarda la simulación actual como una opción del comparador.
+     *
+     * El nombre se compone con la potencia y el precio, que es lo que permite
+     * reconocer el cargador de un vistazo; se puede cambiar luego al editarla.
+     */
+    fun onSaveToComparator() {
+        val inputs = _inputs.value
+        val input = inputs.toChargeInput() ?: return
+        val option = ChargerOption(
+            id = UUID.randomUUID().toString(),
+            name = "${Formatters.power(input.chargerPowerKw)} · " +
+                Formatters.pricePerKWh(java.math.BigDecimal.valueOf(input.pricePerKWh)),
+            pricePerKWh = input.pricePerKWh,
+            chargerPowerKw = input.chargerPowerKw,
+            currentType = input.currentType,
+            startSocPercent = inputs.startSoc,
+            targetSocPercent = inputs.targetSoc,
+            startFeeEur = input.startFeeEur,
+            pricePerMinuteEur = input.pricePerMinuteEur,
+            parkingFeeEur = input.parkingFeeEur,
+        )
+        viewModelScope.launch {
+            _message.value = if (comparatorRepository.upsert(option)) {
+                CalculatorMessage.GUARDADO_EN_COMPARADOR
+            } else {
+                CalculatorMessage.COMPARADOR_LLENO
+            }
+        }
+    }
+
+    /** La pantalla avisa de que ya ha mostrado el mensaje. */
+    fun onMessageShown() {
+        _message.value = null
+    }
+
     // --- Cálculo ------------------------------------------------------------
 
     private fun calculate(inputs: CalculatorInputs, settings: AppSettings): CalculationState {
@@ -169,7 +222,10 @@ class CalculatorViewModel(
                 val application = checkNotNull(
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY],
                 ) as ElectroPericoApplication
-                CalculatorViewModel(application.container.settingsRepository)
+                CalculatorViewModel(
+                    repository = application.container.settingsRepository,
+                    comparatorRepository = application.container.comparatorRepository,
+                )
             }
         }
     }

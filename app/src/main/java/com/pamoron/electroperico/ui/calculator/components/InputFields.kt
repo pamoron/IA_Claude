@@ -53,19 +53,26 @@ fun NumberField(
     unit: String,
     modifier: Modifier = Modifier,
     isLast: Boolean = false,
+    numeric: Boolean = true,
     @StringRes supportingRes: Int? = null,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(stringResource(labelRes)) },
-        trailingIcon = {
-            Text(text = unit, style = MaterialTheme.typography.titleMedium)
+        trailingIcon = if (unit.isBlank()) {
+            null
+        } else {
+            { Text(text = unit, style = MaterialTheme.typography.titleMedium) }
         },
         singleLine = true,
-        textStyle = MaterialTheme.typography.headlineSmall,
+        textStyle = if (numeric) {
+            MaterialTheme.typography.headlineSmall
+        } else {
+            MaterialTheme.typography.bodyLarge
+        },
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
+            keyboardType = if (numeric) KeyboardType.Decimal else KeyboardType.Text,
             imeAction = if (isLast) ImeAction.Done else ImeAction.Next,
         ),
         supportingText = supportingRes?.let { res -> { Text(stringResource(res)) } },

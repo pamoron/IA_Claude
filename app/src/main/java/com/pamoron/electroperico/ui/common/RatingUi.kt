@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.pamoron.electroperico.R
 import com.pamoron.electroperico.domain.model.ChargeWarning
 import com.pamoron.electroperico.domain.model.ChargerRating
+import com.pamoron.electroperico.domain.model.ComparisonSort
 import com.pamoron.electroperico.domain.model.CurrentType
 import com.pamoron.electroperico.domain.model.EstimationMode
 import com.pamoron.electroperico.domain.model.PriceRating
@@ -169,6 +170,14 @@ val EstimationMode.shortLabelRes: Int
         EstimationMode.OPTIMISTA -> R.string.estimacion_corta_optimista
         EstimationMode.NORMAL -> R.string.estimacion_corta_normal
         EstimationMode.CONSERVADORA -> R.string.estimacion_corta_conservadora
+    }
+
+@get:StringRes
+val ComparisonSort.labelRes: Int
+    get() = when (this) {
+        ComparisonSort.MAS_BARATO -> R.string.orden_mas_barato
+        ComparisonSort.MAS_RAPIDO -> R.string.orden_mas_rapido
+        ComparisonSort.MEJOR_EQUILIBRIO -> R.string.orden_mejor_equilibrio
     }
 
 @get:StringRes

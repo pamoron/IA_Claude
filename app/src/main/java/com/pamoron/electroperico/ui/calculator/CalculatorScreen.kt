@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Compare
+import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,12 +28,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -75,18 +80,41 @@ import com.pamoron.electroperico.ui.format.Formatters
 @Composable
 fun CalculatorScreen(
     onOpenSettings: () -> Unit,
+    onOpenComparator: () -> Unit,
     viewModel: CalculatorViewModel = viewModel(factory = CalculatorViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val message by viewModel.message.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) { viewModel.start() }
+
+    // Los avisos puntuales se muestran una sola vez.
+    val guardado = stringResource(R.string.mensaje_guardado_comparador)
+    val lleno = stringResource(R.string.mensaje_comparador_lleno)
+    LaunchedEffect(message) {
+        val actual = message ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(
+            when (actual) {
+                CalculatorMessage.GUARDADO_EN_COMPARADOR -> guardado
+                CalculatorMessage.COMPARADOR_LLENO -> lleno
+            },
+        )
+        viewModel.onMessageShown()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    IconButton(onClick = onOpenComparator) {
+                        Icon(
+                            imageVector = Icons.Filled.Compare,
+                            contentDescription = stringResource(R.string.accion_comparador),
+                        )
+                    }
                     IconButton(onClick = onOpenSettings) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -96,6 +124,7 @@ fun CalculatorScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -166,6 +195,16 @@ fun CalculatorScreen(
                     result = result,
                     estimationLabel = stringResource(state.estimationMode.shortLabelRes),
                 )
+                OutlinedButton(
+                    onClick = viewModel::onSaveToComparator,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                ) {
+                    Icon(imageVector = Icons.Filled.BookmarkAdd, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.accion_guardar_en_comparador))
+                }
             }
 
             Spacer(Modifier.height(8.dp))

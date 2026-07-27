@@ -6,16 +6,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.pamoron.electroperico.ui.calculator.CalculatorScreen
+import com.pamoron.electroperico.ui.comparator.ComparatorScreen
 import com.pamoron.electroperico.ui.settings.SettingsScreen
 
 /**
  * Destinos de la aplicación.
  *
- * En la fase 2 se añadirán aquí "comparador", "historial" y "perfiles"; el
- * grafo ya está preparado para crecer.
+ * En la fase 3 se añadirán aquí "historial" y "perfiles"; el grafo ya está
+ * preparado para crecer.
  */
 object Routes {
     const val CALCULADORA = "calculadora"
+    const val COMPARADOR = "comparador"
     const val AJUSTES = "ajustes"
 }
 
@@ -29,6 +31,12 @@ fun ElectroPericoApp(navController: NavHostController = rememberNavController())
         composable(Routes.CALCULADORA) {
             CalculatorScreen(
                 onOpenSettings = { navController.navigate(Routes.AJUSTES) },
+                onOpenComparator = { navController.navigate(Routes.COMPARADOR) },
+            )
+        }
+        composable(Routes.COMPARADOR) {
+            ComparatorScreen(
+                onBack = { navController.popBackStack() },
             )
         }
         composable(Routes.AJUSTES) {
