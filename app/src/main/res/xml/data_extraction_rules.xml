@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copia de seguridad y transferencia entre dispositivos (Android 12 o superior). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include
+            domain="file"
+            path="datastore" />
+    </cloud-backup>
+    <device-transfer>
+        <include
+            domain="file"
+            path="datastore" />
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Todos los textos visibles de la aplicación.
+  La app está solo en español, así que esta es la carpeta de recursos por defecto.
+-->
+<resources>
+
+    <string name="app_name">Carga EV</string>
+
+    <!-- Unidades -->
+    <string name="unidad_euro_kwh">€/kWh</string>
+    <string name="unidad_euro_min">€/min</string>
+    <string name="unidad_euro">€</string>
+    <string name="unidad_kw">kW</string>
+    <string name="unidad_kwh">kWh</string>
+    <string name="unidad_kwh_100km">kWh/100 km</string>
+    <string name="unidad_porcentaje">%</string>
+
+    <!-- Formatos -->
+    <string name="formato_porcentaje">%1$d %%</string>
+    <string name="formato_tramo">Del %1$d %% al %2$d %%</string>
+
+    <!-- Pantalla principal: entradas -->
+    <string name="cabecera_vehiculo">%1$s · %2$s útiles · Tocar para editar</string>
+    <string name="campo_precio">Precio del cargador</string>
+    <string name="campo_potencia">Potencia del cargador</string>
+    <string name="campo_bateria_actual">Batería actual</string>
+    <string name="campo_bateria_objetivo">Batería objetivo</string>
+    <string name="corriente_ac">AC · Alterna</string>
+    <string name="corriente_dc">DC · Continua</string>
+
+    <string name="seccion_costes_adicionales">Costes adicionales (opcional)</string>
+    <string name="seccion_costes_adicionales_con_datos">Costes adicionales (%1$d activos)</string>
+    <string name="campo_coste_inicio">Coste de inicio de sesión</string>
+    <string name="campo_coste_minuto">Coste por minuto</string>
+    <string name="campo_coste_estacionamiento">Coste de estacionamiento</string>
+
+    <!-- Acciones -->
+    <string name="accion_calcular">Calcular</string>
+    <string name="accion_borrar">Borrar</string>
+    <string name="accion_intercambiar">Intercambiar batería actual y objetivo</string>
+    <string name="accion_ajustes">Ajustes</string>
+    <string name="accion_volver">Volver</string>
+    <string name="accion_guardar">Guardar</string>
+    <string name="accion_restaurar">Restaurar</string>
+
+    <!-- Resultados destacados -->
+    <string name="resultado_coste_estimado">Coste estimado</string>
+    <string name="resultado_tiempo_estimado">Tiempo estimado</string>
+    <string name="resultado_coste_por_100">%1$s por cada 100 km</string>
+    <string name="resultado_estimacion">Estimación %1$s</string>
+
+    <!-- Valoración del precio -->
+    <string name="precio_muy_barato">Muy barato</string>
+    <string name="precio_buen_precio">Buen precio</string>
+    <string name="precio_normal">Precio normal</string>
+    <string name="precio_caro">Caro</string>
+    <string name="precio_muy_caro">Muy caro</string>
+    <string name="detalle_precio_efectivo_y_anunciado">Precio efectivo %1$s · anunciado %2$s</string>
+
+    <!-- Valoración del cargador -->
+    <string name="cargador_dc_lento">Cargador lento para viajes</string>
+    <string name="cargador_dc_adecuado">Cargador adecuado</string>
+    <string name="cargador_dc_muy_adecuado">Cargador muy adecuado para tu coche</string>
+    <string name="cargador_dc_sobredimensionado">Cargador sobredimensionado para tu coche</string>
+    <string name="cargador_ac_muy_lento">Carga en alterna muy lenta</string>
+    <string name="cargador_ac_normal">Carga en alterna normal</string>
+    <string name="cargador_ac_optimo">Aprovechas todo el cargador de a bordo</string>
+    <string name="cargador_ac_limitado">Tu coche limitará la potencia en alterna</string>
+    <string name="detalle_potencia_aprovechada">Aprovecharás hasta %1$s de los %2$s anunciados</string>
+
+    <!-- Detalle de energía y autonomía -->
+    <string name="titulo_energia_y_autonomia">Energía y autonomía</string>
+    <string name="detalle_energia_bateria">Energía que entra en la batería</string>
+    <string name="detalle_energia_facturada">Energía que facturará el cargador</string>
+    <string name="detalle_perdidas">Pérdidas de carga aplicadas</string>
+    <string name="detalle_bateria_anadida">Batería añadida</string>
+    <string name="detalle_autonomia_anadida">Autonomía añadida</string>
+    <string name="nota_autonomia_aproximada">La autonomía es aproximada y depende de tu consumo real, la velocidad, el relieve y la temperatura.</string>
+
+    <!-- Detalle de costes -->
+    <string name="titulo_desglose_coste">Desglose del coste</string>
+    <string name="detalle_coste_energia">Energía</string>
+    <string name="detalle_coste_inicio">Inicio de sesión</string>
+    <string name="detalle_coste_tiempo">Tiempo de ocupación</string>
+    <string name="detalle_coste_estacionamiento">Estacionamiento</string>
+    <string name="detalle_coste_total">Total estimado</string>
+    <string name="detalle_coste_por_minuto">Coste por minuto</string>
+    <string name="detalle_coste_por_100km">Coste por 100 km</string>
+    <string name="detalle_precio_anunciado">Precio anunciado</string>
+    <string name="detalle_precio_efectivo">Precio efectivo estimado</string>
+    <string name="detalle_sobrecoste">Sobrecoste por kWh</string>
+
+    <!-- Desglose del tiempo -->
+    <string name="titulo_desglose_tiempo">Cómo se reparte el tiempo</string>
+    <string name="nota_tiempo_orientativo">El tiempo es orientativo. Puede variar por temperatura, acondicionamiento de la batería, reparto de potencia del cargador, curva de carga y limitaciones de la estación.</string>
+
+    <!-- Avisos -->
+    <string name="etiqueta_aviso">Aviso</string>
+    <string name="titulo_ten_en_cuenta">Ten en cuenta</string>
+    <string name="aviso_sobredimensionado">Este cargador ofrece %1$s, pero tu coche puede aceptar un máximo de %2$s. No obtendrás una carga más rápida que en un cargador ajustado a ese límite, salvo diferencias en la curva de carga o disponibilidad.</string>
+    <string name="aviso_por_encima_del_80">Por encima del 80 %, la velocidad de carga suele disminuir considerablemente.</string>
+    <string name="aviso_soc_inicial_bajo">Con la batería por debajo del 10 %, el coche también limita la potencia durante los primeros minutos.</string>
+    <string name="aviso_potencia_no_garantizada">La potencia indicada por el cargador es una potencia máxima, no garantizada.</string>
+    <string name="aviso_potencia_compartida">En estaciones con varios conectores, la potencia puede compartirse.</string>
+    <string name="aviso_comprobar_tarifas">Comprueba si el operador cobra por minuto, por sesión o por estacionamiento.</string>
+    <string name="aviso_precios_app_tarjeta">Algunos operadores muestran precios diferentes en su aplicación y mediante pago directo con tarjeta.</string>
+    <string name="aviso_perdidas_de_carga">Las pérdidas de carga pueden hacer que el cargador facture más energía de la que entra en la batería.</string>
+    <string name="nota_valores_estimados">Todas las cifras son estimaciones, no valores exactos. Comprueba siempre el importe final en el cargador o en la aplicación del operador.</string>
+
+    <!-- Errores de validación -->
+    <string name="error_precio_negativo">El precio por kWh no puede ser negativo.</string>
+    <string name="error_potencia_cargador">Indica una potencia de cargador mayor que cero.</string>
+    <string name="error_porcentaje_rango">Los porcentajes de batería deben estar entre 0 y 100.</string>
+    <string name="error_objetivo_no_superior">La batería objetivo debe ser mayor que la actual.</string>
+    <string name="error_capacidad">La capacidad útil del perfil debe ser mayor que cero. Revísala en Ajustes.</string>
+    <string name="error_consumo">El consumo medio del perfil debe ser mayor que cero. Revísalo en Ajustes.</string>
+    <string name="error_perdidas">Las pérdidas de carga deben estar entre 0 y 99 %. Revísalas en Ajustes.</string>
+    <string name="error_potencia_vehiculo">Tu perfil no tiene potencia máxima para ese tipo de corriente. Revísalo en Ajustes.</string>
+    <string name="error_coste_adicional">Los costes adicionales no pueden ser negativos.</string>
+
+    <!-- Ajustes -->
+    <string name="titulo_ajustes">Ajustes</string>
+    <string name="titulo_perfil_vehiculo">Perfil del vehículo</string>
+    <string name="campo_marca">Marca</string>
+    <string name="campo_modelo">Modelo</string>
+    <string name="campo_capacidad_bruta">Capacidad bruta</string>
+    <string name="ayuda_capacidad_bruta">Solo informativa: los cálculos usan la capacidad útil.</string>
+    <string name="campo_capacidad_util">Capacidad útil</string>
+    <string name="ayuda_capacidad_util">Es la energía realmente disponible entre el 0 y el 100 %.</string>
+    <string name="campo_potencia_maxima_dc">Potencia máxima en continua</string>
+    <string name="campo_potencia_maxima_ac">Potencia máxima en alterna</string>
+    <string name="campo_consumo">Consumo medio</string>
+    <string name="campo_perdidas_ac">Pérdidas en alterna</string>
+    <string name="campo_perdidas_dc">Pérdidas en continua</string>
+    <string name="ayuda_perdidas">Diferencia entre lo que factura el cargador y lo que entra en la batería.</string>
+
+    <string name="titulo_estimacion_tiempo">Estimación de tiempo</string>
+    <string name="ayuda_estimacion_tiempo">Ajusta lo prudente que quieres que sea la estimación. La conservadora tiene en cuenta el frío, la batería sin acondicionar y el reparto de potencia.</string>
+    <string name="estimacion_optimista">Optimista (10 % menos de tiempo)</string>
+    <string name="estimacion_normal">Normal</string>
+    <string name="estimacion_conservadora">Conservadora (15 % más de tiempo)</string>
+    <string name="estimacion_corta_optimista">optimista</string>
+    <string name="estimacion_corta_normal">normal</string>
+    <string name="estimacion_corta_conservadora">conservadora</string>
+
+    <string name="titulo_umbrales_precio">Valoración del precio</string>
+    <string name="ayuda_umbrales_precio">Límite superior de cada categoría, en €/kWh. Deben ir de menor a mayor.</string>
+    <string name="campo_umbral_muy_barato">Hasta aquí, muy barato</string>
+    <string name="campo_umbral_buen_precio">Hasta aquí, buen precio</string>
+    <string name="campo_umbral_normal">Hasta aquí, precio normal</string>
+    <string name="campo_umbral_caro">Hasta aquí, caro</string>
+
+    <string name="error_umbrales_crecientes">Los umbrales deben ser positivos y estar ordenados de menor a mayor.</string>
+    <string name="error_perfil_incompleto">Revisa el perfil: la capacidad útil, las potencias y el consumo deben ser mayores que cero.</string>
+    <string name="mensaje_guardado">Cambios guardados.</string>
+    <string name="nota_fases_siguientes">Próximas fases: comparador de cargadores, historial de recargas y varios perfiles de vehículo.</string>
+
+</resources>

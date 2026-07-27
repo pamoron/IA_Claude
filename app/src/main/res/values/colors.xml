@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fondo de la ventana antes de que Compose dibuje. Coincide con el
+         "background" del esquema claro definido en ui/theme/Color.kt. -->
+    <color name="window_background">#FFFAFDFC</color>
+
+    <!-- Fondo del icono adaptativo. -->
+    <color name="ic_launcher_background">#FF00696D</color>
+</resources>

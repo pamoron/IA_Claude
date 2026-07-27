@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tema del sistema para la ventana de la actividad.
+  Los colores reales los pone Compose (ui/theme/Theme.kt); aquí solo se define
+  el fondo de ventana para que no haya un destello blanco al arrancar.
+-->
+<resources>
+    <style name="Theme.CargaEV" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>
