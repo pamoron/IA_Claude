@@ -1,6 +1,7 @@
 package com.pamoron.electroperico.data.settings
 
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -34,17 +35,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     /** Guarda el perfil del vehículo editado en ajustes. */
     suspend fun updateVehicle(vehicle: VehicleProfile) {
-        dataStore.edit { prefs ->
-            prefs[Keys.VEHICLE_BRAND] = vehicle.brand
-            prefs[Keys.VEHICLE_MODEL] = vehicle.model
-            prefs[Keys.GROSS_CAPACITY] = vehicle.grossCapacityKWh
-            prefs[Keys.USABLE_CAPACITY] = vehicle.usableCapacityKWh
-            prefs[Keys.MAX_DC_POWER] = vehicle.maxDcPowerKw
-            prefs[Keys.MAX_AC_POWER] = vehicle.maxAcPowerKw
-            prefs[Keys.CONSUMPTION] = vehicle.consumptionKWhPer100Km
-            prefs[Keys.AC_LOSS] = vehicle.acLossPercent
-            prefs[Keys.DC_LOSS] = vehicle.dcLossPercent
-        }
+        dataStore.edit { prefs -> writeVehicle(prefs, vehicle) }
     }
 
     /** Guarda el grado de prudencia de la estimación de tiempo. */
@@ -54,12 +45,7 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     /** Guarda los umbrales de valoración del precio. */
     suspend fun updatePriceThresholds(thresholds: PriceThresholds) {
-        dataStore.edit { prefs ->
-            prefs[Keys.PRICE_VERY_CHEAP_MAX] = thresholds.veryCheapMax
-            prefs[Keys.PRICE_GOOD_MAX] = thresholds.goodMax
-            prefs[Keys.PRICE_NORMAL_MAX] = thresholds.normalMax
-            prefs[Keys.PRICE_EXPENSIVE_MAX] = thresholds.expensiveMax
-        }
+        dataStore.edit { prefs -> writeThresholds(prefs, thresholds) }
     }
 
     /** Recuerda los últimos valores usados en la calculadora. */
@@ -76,11 +62,38 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    /** Restaura el perfil de fábrica y los umbrales por defecto, sin tocar la última sesión. */
+    /**
+     * Restaura el perfil de fábrica y los umbrales por defecto, sin tocar la última sesión.
+     *
+     * Las tres partes se escriben en una única transacción de DataStore: si el
+     * proceso muriera a mitad de la restauración, o se aplican los tres valores
+     * de fábrica o no se aplica ninguno, nunca una mezcla a medias.
+     */
     suspend fun restoreDefaults() {
-        updateVehicle(VehicleProfile.BYD_ATTO_2_COMFORT)
-        updatePriceThresholds(PriceThresholds.DEFAULT)
-        updateEstimationMode(EstimationMode.DEFAULT)
+        dataStore.edit { prefs ->
+            writeVehicle(prefs, VehicleProfile.BYD_ATTO_2_COMFORT)
+            writeThresholds(prefs, PriceThresholds.DEFAULT)
+            prefs[Keys.ESTIMATION_MODE] = EstimationMode.DEFAULT.name
+        }
+    }
+
+    private fun writeVehicle(prefs: MutablePreferences, vehicle: VehicleProfile) {
+        prefs[Keys.VEHICLE_BRAND] = vehicle.brand
+        prefs[Keys.VEHICLE_MODEL] = vehicle.model
+        prefs[Keys.GROSS_CAPACITY] = vehicle.grossCapacityKWh
+        prefs[Keys.USABLE_CAPACITY] = vehicle.usableCapacityKWh
+        prefs[Keys.MAX_DC_POWER] = vehicle.maxDcPowerKw
+        prefs[Keys.MAX_AC_POWER] = vehicle.maxAcPowerKw
+        prefs[Keys.CONSUMPTION] = vehicle.consumptionKWhPer100Km
+        prefs[Keys.AC_LOSS] = vehicle.acLossPercent
+        prefs[Keys.DC_LOSS] = vehicle.dcLossPercent
+    }
+
+    private fun writeThresholds(prefs: MutablePreferences, thresholds: PriceThresholds) {
+        prefs[Keys.PRICE_VERY_CHEAP_MAX] = thresholds.veryCheapMax
+        prefs[Keys.PRICE_GOOD_MAX] = thresholds.goodMax
+        prefs[Keys.PRICE_NORMAL_MAX] = thresholds.normalMax
+        prefs[Keys.PRICE_EXPENSIVE_MAX] = thresholds.expensiveMax
     }
 
     /** Traduce las preferencias almacenadas al modelo de dominio. */
@@ -90,13 +103,19 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
             id = VehicleProfile.DEFAULT_ID,
             brand = this[Keys.VEHICLE_BRAND] ?: defaultVehicle.brand,
             model = this[Keys.VEHICLE_MODEL] ?: defaultVehicle.model,
-            grossCapacityKWh = this[Keys.GROSS_CAPACITY] ?: defaultVehicle.grossCapacityKWh,
-            usableCapacityKWh = this[Keys.USABLE_CAPACITY] ?: defaultVehicle.usableCapacityKWh,
-            maxDcPowerKw = this[Keys.MAX_DC_POWER] ?: defaultVehicle.maxDcPowerKw,
-            maxAcPowerKw = this[Keys.MAX_AC_POWER] ?: defaultVehicle.maxAcPowerKw,
-            consumptionKWhPer100Km = this[Keys.CONSUMPTION] ?: defaultVehicle.consumptionKWhPer100Km,
-            acLossPercent = this[Keys.AC_LOSS] ?: defaultVehicle.acLossPercent,
-            dcLossPercent = this[Keys.DC_LOSS] ?: defaultVehicle.dcLossPercent,
+            // Un valor ausente, no numérico (NaN/±Infinito) o no positivo se
+            // sustituye por el de fábrica: una capacidad o potencia a cero o en
+            // negativo dejaría la app en un estado inválido al releerla.
+            grossCapacityKWh = positiveOrDefault(this[Keys.GROSS_CAPACITY], defaultVehicle.grossCapacityKWh),
+            usableCapacityKWh = positiveOrDefault(this[Keys.USABLE_CAPACITY], defaultVehicle.usableCapacityKWh),
+            maxDcPowerKw = positiveOrDefault(this[Keys.MAX_DC_POWER], defaultVehicle.maxDcPowerKw),
+            maxAcPowerKw = positiveOrDefault(this[Keys.MAX_AC_POWER], defaultVehicle.maxAcPowerKw),
+            consumptionKWhPer100Km = positiveOrDefault(
+                this[Keys.CONSUMPTION],
+                defaultVehicle.consumptionKWhPer100Km,
+            ),
+            acLossPercent = lossPercentOrDefault(this[Keys.AC_LOSS], defaultVehicle.acLossPercent),
+            dcLossPercent = lossPercentOrDefault(this[Keys.DC_LOSS], defaultVehicle.dcLossPercent),
         )
         val thresholds = PriceThresholds(
             veryCheapMax = this[Keys.PRICE_VERY_CHEAP_MAX] ?: PriceThresholds.DEFAULT.veryCheapMax,
@@ -125,6 +144,14 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     private fun currentTypeOf(name: String?): CurrentType =
         CurrentType.entries.firstOrNull { it.name == name } ?: CurrentType.DC
+
+    /** Una capacidad, potencia o consumo debe ser finito y estrictamente positivo. */
+    private fun positiveOrDefault(stored: Double?, default: Double): Double =
+        stored?.takeIf { it.isFinite() && it > 0.0 } ?: default
+
+    /** Un porcentaje de pérdidas debe ser finito y estar en [0, 100). */
+    private fun lossPercentOrDefault(stored: Double?, default: Double): Double =
+        stored?.takeIf { it.isFinite() && it >= 0.0 && it < 100.0 } ?: default
 
     /** Claves de DataStore. Se mantienen agrupadas para evitar duplicados. */
     private object Keys {

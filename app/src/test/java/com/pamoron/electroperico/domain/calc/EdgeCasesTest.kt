@@ -2,6 +2,7 @@ package com.pamoron.electroperico.domain.calc
 
 import com.pamoron.electroperico.domain.calc.TestFixtures.EPSILON
 import com.pamoron.electroperico.domain.model.ChargerRating
+import com.pamoron.electroperico.domain.model.ValidationError
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -9,139 +10,111 @@ import org.junit.Test
 /**
  * Pruebas de casos límite del motor de cálculo.
  *
- * Cubren bordes exactos de los tramos de la curva de carga, fronteras de
- * clasificación y entradas degeneradas (NaN / infinito) que la validación
- * actual no cubre.
+ * Cubren los bordes exactos de los tramos de la curva de carga, las fronteras
+ * de clasificación y las entradas degeneradas (NaN, infinito y valores
+ * absurdamente pequeños).
  *
- * Varias pruebas de este fichero documentan defectos reales encontrados
- * durante la revisión (se explican en el comentario de cada una). No se
- * corrigen aquí: el encargo de esta fase es detectarlos y dejar constancia
- * del comportamiento actual con un test que lo reproduce; la corrección
- * pertenece a otra fase.
+ * Varias de estas pruebas nacieron de una revisión que encontró que el motor
+ * dejaba escapar excepciones no controladas ante números no finitos. La
+ * validación ya se ha endurecido; estas pruebas fijan el comportamiento
+ * correcto para que no se pierda.
  */
 class EdgeCasesTest {
 
     // -----------------------------------------------------------------------
-    // DEFECTO REAL: la validación de los costes adicionales no detecta NaN.
+    // Números no finitos.
     //
-    // ChargeCalculator.kt (función `validate`, la comprobación de
-    // startFeeEur/pricePerMinuteEur/parkingFeeEur) solo descarta valores
-    // negativos con "< 0.0". Como cualquier comparación con NaN devuelve
-    // false, un coste NaN atraviesa la validación sin generar
-    // ValidationError.COSTE_ADICIONAL_NEGATIVO. Más adelante Money.eur() /
-    // Money.eurFromProduct() llaman a BigDecimal.valueOf(NaN), que lanza
-    // NumberFormatException porque BigDecimal no sabe interpretar la cadena
-    // "NaN". El resultado es que una entrada inválida no produce un
-    // CalculationOutcome.Failure controlado, sino una excepción no capturada
-    // que llegaría intacta hasta la UI.
-    // -----------------------------------------------------------------------
-
-    @Test(expected = NumberFormatException::class)
-    fun `un coste de inicio NaN no lo detecta la validacion y rompe el calculo`() {
-        ChargeCalculator.calculate(
-            TestFixtures.input(startFeeEur = Double.NaN),
-            TestFixtures.vehicle,
-        )
-    }
-
-    @Test(expected = NumberFormatException::class)
-    fun `un precio por minuto NaN no lo detecta la validacion y rompe el calculo`() {
-        ChargeCalculator.calculate(
-            TestFixtures.input(pricePerMinuteEur = Double.NaN),
-            TestFixtures.vehicle,
-        )
-    }
-
-    @Test(expected = NumberFormatException::class)
-    fun `un coste de estacionamiento NaN no lo detecta la validacion y rompe el calculo`() {
-        ChargeCalculator.calculate(
-            TestFixtures.input(parkingFeeEur = Double.NaN),
-            TestFixtures.vehicle,
-        )
-    }
-
-    // -----------------------------------------------------------------------
-    // DEFECTO REAL: el precio por kWh solo se descarta si es negativo o NaN,
-    // pero no si es infinito (ChargeCalculator.kt, comprobación de
-    // input.pricePerKWh dentro de `validate`). Un precio "Infinity" pasa la
-    // validación y revienta igual que los casos anteriores al construir el
-    // BigDecimal del coste de la energía.
-    // -----------------------------------------------------------------------
-
-    @Test(expected = NumberFormatException::class)
-    fun `un precio por kwh infinito no lo detecta la validacion y rompe el calculo`() {
-        ChargeCalculator.calculate(
-            TestFixtures.input(pricePerKWh = Double.POSITIVE_INFINITY),
-            TestFixtures.vehicle,
-        )
-    }
-
-    // -----------------------------------------------------------------------
-    // DEFECTO REAL: el perfil del vehículo tampoco se protege frente a NaN.
-    // ChargeCalculator.kt comprueba "usableCapacityKWh <= 0.0", que también
-    // es false para NaN, así que un perfil con la capacidad en NaN pasa la
-    // validación. Aquí el fallo aparece incluso antes que en los casos
-    // anteriores: rawMinutes se convierte en NaN y Double.roundToInt()
-    // (usado al calcular `minutes`) lanza directamente
-    // IllegalArgumentException en lugar de NumberFormatException.
-    // -----------------------------------------------------------------------
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `una capacidad util nan en el perfil no la detecta la validacion y rompe el redondeo de minutos`() {
-        val perfilInvalido = TestFixtures.vehicle.copy(usableCapacityKWh = Double.NaN)
-        ChargeCalculator.calculate(TestFixtures.input(), perfilInvalido)
-    }
-
-    // -----------------------------------------------------------------------
-    // DEFECTO REAL: las pérdidas del perfil tampoco se protegen frente a NaN.
-    // La comprobación "loss < 0.0 || loss >= 1.0" es false en ambos casos
-    // para NaN, así que un perfil con dcLossPercent = NaN pasa la validación.
-    // La energía facturada (energyNeeded / (1 - loss)) se convierte en NaN y
-    // revienta más tarde en Money.eurFromProduct().
-    // -----------------------------------------------------------------------
-
-    @Test(expected = NumberFormatException::class)
-    fun `unas perdidas nan en el perfil no las detecta la validacion y rompen el coste de la energia`() {
-        val perfilInvalido = TestFixtures.vehicle.copy(dcLossPercent = Double.NaN)
-        ChargeCalculator.calculate(TestFixtures.input(), perfilInvalido)
-    }
-
-    // -----------------------------------------------------------------------
-    // DEFECTO REAL: costPer100Km solo se protege frente a
-    // "rangeAddedKm <= 0.0"; no contempla que rangeAddedKm pueda desbordar a
-    // infinito. La validación de perfil solo exige "consumptionKWhPer100Km >
-    // 0.0", así que un consumo extremadamente pequeño (pero formalmente
-    // válido) hace que "energyNeededKWh / consumo * 100" se desborde a
-    // Infinity, y BigDecimal.valueOf(Infinity) revienta con la misma
-    // NumberFormatException que los casos anteriores.
-    // -----------------------------------------------------------------------
-
-    @Test(expected = NumberFormatException::class)
-    fun `un consumo extremadamente pequeno desborda la autonomia a infinito y rompe el coste por cien km`() {
-        val perfilInvalido = TestFixtures.vehicle.copy(consumptionKWhPer100Km = Double.MIN_VALUE)
-        ChargeCalculator.calculate(TestFixtures.input(), perfilInvalido)
-    }
-
-    // -----------------------------------------------------------------------
-    // DEFECTO REAL (silencioso, no lanza excepción): con una potencia de
-    // cargador formalmente válida (> 0) pero absurdamente pequeña, rawMinutes
-    // se dispara a billones de minutos. Double.roundToInt() no lanza
-    // excepción para un valor finito tan grande: satura el resultado a
-    // Int.MAX_VALUE (2 147 483 647), de modo que el usuario vería
-    // "2147483647 min" en pantalla en lugar de un aviso o un error de
-    // validación. Se documenta el comportamiento actual porque corregirlo
-    // (por ejemplo, exigiendo una potencia mínima razonable) no es tarea de
-    // esta fase.
+    // Un NaN hace que toda comparación («< 0», «<= 0») sea falsa, así que
+    // antes se colaba hasta BigDecimal.valueOf y reventaba con una excepción
+    // no controlada. Ahora la validación exige además que el número sea
+    // finito, de modo que estas entradas devuelven un fallo ordenado.
     // -----------------------------------------------------------------------
 
     @Test
-    fun `una potencia de cargador irrisoria hace que los minutos se saturen en vez de fallar`() {
+    fun `un coste de inicio NaN se rechaza en la validacion`() {
+        val errores = TestFixtures.failure(TestFixtures.input(startFeeEur = Double.NaN)).errors
+        assertTrue(errores.contains(ValidationError.COSTE_ADICIONAL_NEGATIVO))
+    }
+
+    @Test
+    fun `un precio por minuto NaN se rechaza en la validacion`() {
+        val errores = TestFixtures.failure(TestFixtures.input(pricePerMinuteEur = Double.NaN)).errors
+        assertTrue(errores.contains(ValidationError.COSTE_ADICIONAL_NEGATIVO))
+    }
+
+    @Test
+    fun `un coste de estacionamiento NaN se rechaza en la validacion`() {
+        val errores = TestFixtures.failure(TestFixtures.input(parkingFeeEur = Double.NaN)).errors
+        assertTrue(errores.contains(ValidationError.COSTE_ADICIONAL_NEGATIVO))
+    }
+
+    @Test
+    fun `un precio por kwh infinito se rechaza en la validacion`() {
+        val errores = TestFixtures
+            .failure(TestFixtures.input(pricePerKWh = Double.POSITIVE_INFINITY)).errors
+        assertTrue(errores.contains(ValidationError.PRECIO_NEGATIVO))
+    }
+
+    @Test
+    fun `una potencia de cargador infinita se rechaza en la validacion`() {
+        val errores = TestFixtures
+            .failure(TestFixtures.input(chargerPowerKw = Double.POSITIVE_INFINITY)).errors
+        assertTrue(errores.contains(ValidationError.POTENCIA_CARGADOR_INVALIDA))
+    }
+
+    @Test
+    fun `un porcentaje NaN se rechaza en la validacion`() {
+        val errores = TestFixtures.failure(TestFixtures.input(startSocPercent = Double.NaN)).errors
+        assertTrue(errores.contains(ValidationError.PORCENTAJE_FUERA_DE_RANGO))
+    }
+
+    @Test
+    fun `una capacidad util NaN en el perfil se rechaza en la validacion`() {
+        val perfil = TestFixtures.vehicle.copy(usableCapacityKWh = Double.NaN)
+        val errores = TestFixtures.failure(TestFixtures.input(), perfil).errors
+        assertTrue(errores.contains(ValidationError.CAPACIDAD_INVALIDA))
+    }
+
+    @Test
+    fun `unas perdidas NaN en el perfil se rechazan en la validacion`() {
+        val perfil = TestFixtures.vehicle.copy(dcLossPercent = Double.NaN)
+        val errores = TestFixtures.failure(TestFixtures.input(), perfil).errors
+        assertTrue(errores.contains(ValidationError.PERDIDAS_INVALIDAS))
+    }
+
+    @Test
+    fun `un consumo NaN en el perfil se rechaza en la validacion`() {
+        val perfil = TestFixtures.vehicle.copy(consumptionKWhPer100Km = Double.NaN)
+        val errores = TestFixtures.failure(TestFixtures.input(), perfil).errors
+        assertTrue(errores.contains(ValidationError.CONSUMO_INVALIDO))
+    }
+
+    // -----------------------------------------------------------------------
+    // Valores extremos pero formalmente válidos.
+    //
+    // No son entradas realistas, pero no deben reventar ni mostrar cifras
+    // absurdas: el resultado se acota y se sigue pudiendo enseñar.
+    // -----------------------------------------------------------------------
+
+    @Test
+    fun `un consumo diminuto no desborda el coste por cien kilometros`() {
+        // La autonomía se desborda a infinito; el coste por 100 km cae a cero
+        // en lugar de reventar al construir el BigDecimal.
+        val perfil = TestFixtures.vehicle.copy(consumptionKWhPer100Km = Double.MIN_VALUE)
+        val resultado = TestFixtures.success(TestFixtures.input(), perfil)
+        assertEquals(Money.ZERO, resultado.costPer100KmEur)
+    }
+
+    @Test
+    fun `una potencia de cargador irrisoria acota los minutos en lugar de desbordar`() {
         val resultado = TestFixtures.success(TestFixtures.input(chargerPowerKw = 1e-9))
         assertTrue(
-            "Se esperaba un tiempo bruto astronomicamente alto",
+            "Se esperaba un tiempo bruto astronómicamente alto",
             resultado.rawMinutes > 1.0e12,
         )
-        assertEquals(Int.MAX_VALUE, resultado.minutes)
+        // Siete días es el tope: por encima la estimación ya no dice nada.
+        assertEquals(7 * 24 * 60, resultado.minutes)
+        assertTrue(resultado.minutes < Int.MAX_VALUE)
     }
 
     // -----------------------------------------------------------------------

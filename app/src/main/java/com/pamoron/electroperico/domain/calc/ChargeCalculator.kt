@@ -38,6 +38,14 @@ object ChargeCalculator {
     private const val OVERSIZE_TOLERANCE = 1.05
 
     /**
+     * Tope de minutos que se muestran: siete días.
+     *
+     * Por encima de ahí la estimación ya no significa nada, y sin tope un
+     * cargador de potencia ridícula desbordaría el entero.
+     */
+    private const val MAX_MINUTES = 7 * 24 * 60
+
+    /**
      * Calcula el resultado de una sesión de recarga.
      *
      * @param input datos del cargador y de la sesión.
@@ -86,7 +94,13 @@ object ChargeCalculator {
         )
         val rawMinutes = segments.sumOf { it.minutes }
         // Nunca se muestra "0 min": cualquier sesión ocupa al menos un minuto.
-        val minutes = max(1, rawMinutes.roundToInt())
+        // El tope evita que una potencia irrisoria pero formalmente válida
+        // (0,000001 kW) sature el entero y muestre una cifra absurda.
+        val minutes = if (rawMinutes.isFinite()) {
+            rawMinutes.roundToInt().coerceIn(1, MAX_MINUTES)
+        } else {
+            MAX_MINUTES
+        }
 
         // --- Dinero --------------------------------------------------------
         // Cada partida se redondea a dos decimales antes de sumar, para que el
@@ -157,14 +171,21 @@ object ChargeCalculator {
     // Validación
     // -----------------------------------------------------------------------
 
-    /** Comprueba las entradas y el perfil. Devuelve una lista vacía si todo es correcto. */
+    /**
+     * Comprueba las entradas y el perfil. Devuelve una lista vacía si todo es correcto.
+     *
+     * Todas las comprobaciones exigen además que el número sea **finito**: un NaN
+     * hace que cualquier comparación (`< 0`, `<= 0`) sea falsa y se colaría hasta
+     * `BigDecimal.valueOf`, que revienta. Es preferible devolver un error de
+     * validación que dejar escapar una excepción.
+     */
     private fun validate(input: ChargeInput, vehicle: VehicleProfile): List<ValidationError> {
         val errors = mutableListOf<ValidationError>()
 
-        if (input.pricePerKWh < 0.0 || input.pricePerKWh.isNaN()) {
+        if (!input.pricePerKWh.isFiniteAndAtLeastZero()) {
             errors += ValidationError.PRECIO_NEGATIVO
         }
-        if (input.chargerPowerKw <= 0.0 || input.chargerPowerKw.isNaN()) {
+        if (!input.chargerPowerKw.isFiniteAndPositive()) {
             errors += ValidationError.POTENCIA_CARGADOR_INVALIDA
         }
         if (!input.startSocPercent.isInSocRange() || !input.targetSocPercent.isInSocRange()) {
@@ -173,26 +194,33 @@ object ChargeCalculator {
             // Solo tiene sentido comprobarlo si ambos porcentajes son válidos.
             errors += ValidationError.OBJETIVO_NO_SUPERIOR_AL_ACTUAL
         }
-        if (input.startFeeEur < 0.0 || input.pricePerMinuteEur < 0.0 || input.parkingFeeEur < 0.0) {
+        if (!input.startFeeEur.isFiniteAndAtLeastZero() ||
+            !input.pricePerMinuteEur.isFiniteAndAtLeastZero() ||
+            !input.parkingFeeEur.isFiniteAndAtLeastZero()
+        ) {
             errors += ValidationError.COSTE_ADICIONAL_NEGATIVO
         }
-        if (vehicle.usableCapacityKWh <= 0.0) {
+        if (!vehicle.usableCapacityKWh.isFiniteAndPositive()) {
             errors += ValidationError.CAPACIDAD_INVALIDA
         }
-        if (vehicle.consumptionKWhPer100Km <= 0.0) {
+        if (!vehicle.consumptionKWhPer100Km.isFiniteAndPositive()) {
             errors += ValidationError.CONSUMO_INVALIDO
         }
-        if (vehicle.maxPowerKwFor(input.currentType) <= 0.0) {
+        if (!vehicle.maxPowerKwFor(input.currentType).isFiniteAndPositive()) {
             errors += ValidationError.POTENCIA_VEHICULO_INVALIDA
         }
         val loss = vehicle.lossFractionFor(input.currentType)
-        if (loss < 0.0 || loss >= 1.0) {
+        if (!loss.isFinite() || loss < 0.0 || loss >= 1.0) {
             errors += ValidationError.PERDIDAS_INVALIDAS
         }
         return errors
     }
 
-    private fun Double.isInSocRange(): Boolean = !isNaN() && this >= 0.0 && this <= 100.0
+    private fun Double.isInSocRange(): Boolean = isFinite() && this >= 0.0 && this <= 100.0
+
+    private fun Double.isFiniteAndPositive(): Boolean = isFinite() && this > 0.0
+
+    private fun Double.isFiniteAndAtLeastZero(): Boolean = isFinite() && this >= 0.0
 
     // -----------------------------------------------------------------------
     // Tiempo
@@ -255,7 +283,7 @@ object ChargeCalculator {
 
     /** Coste por cada 100 km añadidos. Devuelve cero si no hay autonomía que repartir. */
     private fun costPer100Km(totalCost: BigDecimal, rangeAddedKm: Double): BigDecimal =
-        if (rangeAddedKm <= 0.0) {
+        if (!rangeAddedKm.isFinite() || rangeAddedKm <= 0.0) {
             Money.ZERO
         } else {
             totalCost

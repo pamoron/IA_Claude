@@ -42,7 +42,11 @@ data class VehicleForm(
 
     /** Convierte el formulario en un perfil, o `null` si algún campo no es válido. */
     fun toProfile(): VehicleProfile? {
-        val gross = Formatters.parseDecimal(grossCapacity) ?: return null
+        // Igual que el resto de campos: cero o negativo no es una capacidad real
+        // y, además, un valor guardado a 0 se mostraría luego como campo en
+        // blanco (ver Formatters.toEditableText), dejando el formulario sin
+        // poder guardarse hasta que el usuario lo retocara a mano.
+        val gross = Formatters.parseDecimal(grossCapacity)?.takeIf { it > 0.0 } ?: return null
         val usable = Formatters.parseDecimal(usableCapacity)?.takeIf { it > 0.0 } ?: return null
         val dc = Formatters.parseDecimal(maxDcPower)?.takeIf { it > 0.0 } ?: return null
         val ac = Formatters.parseDecimal(maxAcPower)?.takeIf { it > 0.0 } ?: return null

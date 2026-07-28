@@ -123,12 +123,27 @@ class HistoryRepository(private val dataStore: DataStore<Preferences>) {
             val updated = if (index >= 0) {
                 current.toMutableList().also { it[index] = entry }
             } else {
-                // Las más recientes van al principio; el tope evita que el
-                // fichero crezca sin control.
-                (listOf(entry) + current).take(MAX_ENTRIES)
+                // Las más recientes van al principio; trimToLimit() se encarga
+                // de recortar sin perder los favoritos si se supera el tope.
+                listOf(entry) + current
             }
-            prefs[Keys.ENTRIES] = encode(updated)
+            prefs[Keys.ENTRIES] = encode(trimToLimit(updated))
         }
+    }
+
+    /**
+     * Si se supera [MAX_ENTRIES], conserva primero los favoritos y llena el
+     * resto con las entradas no favoritas más recientes.
+     *
+     * Recortar sin más por la cola (quedarse solo con las `MAX_ENTRIES`
+     * primeras) haría desaparecer sin aviso un cargador que el usuario marcó
+     * como favorito en cuanto se acumularan suficientes recargas nuevas, que es
+     * justo lo contrario de lo que promete la estrella.
+     */
+    private fun trimToLimit(entries: List<HistoryEntry>): List<HistoryEntry> {
+        if (entries.size <= MAX_ENTRIES) return entries
+        val (favorites, rest) = entries.partition { it.favorite }
+        return (favorites + rest).take(MAX_ENTRIES)
     }
 
     /** Elimina una entrada. */
