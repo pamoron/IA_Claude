@@ -16,6 +16,61 @@ import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+/** Representación serializable de un perfil, aislada de la capa de dominio. */
+@Serializable
+private data class VehicleProfileDto(
+    val id: String,
+    val brand: String,
+    val model: String,
+    val grossCapacityKWh: Double,
+    val usableCapacityKWh: Double,
+    val maxDcPowerKw: Double,
+    val maxAcPowerKw: Double,
+    val consumptionKWhPer100Km: Double,
+    val acLossPercent: Double,
+    val dcLossPercent: Double,
+)
+
+private fun VehicleProfile.toDto() = VehicleProfileDto(
+    id = id,
+    brand = brand,
+    model = model,
+    grossCapacityKWh = grossCapacityKWh,
+    usableCapacityKWh = usableCapacityKWh,
+    maxDcPowerKw = maxDcPowerKw,
+    maxAcPowerKw = maxAcPowerKw,
+    consumptionKWhPer100Km = consumptionKWhPer100Km,
+    acLossPercent = acLossPercent,
+    dcLossPercent = dcLossPercent,
+)
+
+private fun VehicleProfileDto.toDomain() = VehicleProfile(
+    id = id,
+    brand = brand,
+    model = model,
+    grossCapacityKWh = grossCapacityKWh,
+    usableCapacityKWh = usableCapacityKWh,
+    maxDcPowerKw = maxDcPowerKw,
+    maxAcPowerKw = maxAcPowerKw,
+    consumptionKWhPer100Km = consumptionKWhPer100Km,
+    acLossPercent = acLossPercent,
+    dcLossPercent = dcLossPercent,
+)
+
+private fun VehicleProfile.isValid(): Boolean =
+    id.isNotBlank() && (brand.isNotBlank() || model.isNotBlank()) &&
+        grossCapacityKWh.isFinite() && grossCapacityKWh > 0.0 &&
+        usableCapacityKWh.isFinite() && usableCapacityKWh > 0.0 &&
+        maxDcPowerKw.isFinite() && maxDcPowerKw > 0.0 &&
+        maxAcPowerKw.isFinite() && maxAcPowerKw > 0.0 &&
+        consumptionKWhPer100Km.isFinite() && consumptionKWhPer100Km > 0.0 &&
+        acLossPercent.isFinite() && acLossPercent >= 0.0 && acLossPercent < 100.0 &&
+        dcLossPercent.isFinite() && dcLossPercent >= 0.0 && dcLossPercent < 100.0
 
 /**
  * Persistencia de los ajustes en DataStore Preferences.
@@ -26,6 +81,8 @@ import kotlinx.coroutines.flow.map
  */
 class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
+    private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+
     /** Ajustes actuales. Ante un fallo de lectura se devuelven los valores por defecto. */
     val settings: Flow<AppSettings> = dataStore.data
         .catch { error ->
@@ -35,7 +92,30 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     /** Guarda el perfil del vehículo editado en ajustes. */
     suspend fun updateVehicle(vehicle: VehicleProfile) {
-        dataStore.edit { prefs -> writeVehicle(prefs, vehicle) }
+        dataStore.edit { prefs ->
+            val current = profilesFrom(prefs)
+            val updated = current.map { if (it.id == vehicle.id) vehicle else it }
+            writeProfiles(prefs, if (updated.any { it.id == vehicle.id }) updated else current + vehicle)
+            prefs[Keys.ACTIVE_PROFILE_ID] = vehicle.id
+        }
+    }
+
+    /** Activa uno de los perfiles guardados. */
+    suspend fun selectProfile(id: String) {
+        dataStore.edit { prefs ->
+            if (profilesFrom(prefs).any { it.id == id }) prefs[Keys.ACTIVE_PROFILE_ID] = id
+        }
+    }
+
+    /** Elimina un perfil, manteniendo siempre al menos uno disponible. */
+    suspend fun deleteProfile(id: String) {
+        dataStore.edit { prefs ->
+            val current = profilesFrom(prefs)
+            if (current.size <= 1) return@edit
+            val updated = current.filterNot { it.id == id }
+            writeProfiles(prefs, updated)
+            if (prefs[Keys.ACTIVE_PROFILE_ID] == id) prefs[Keys.ACTIVE_PROFILE_ID] = updated.first().id
+        }
     }
 
     /** Guarda el grado de prudencia de la estimación de tiempo. */
@@ -71,7 +151,8 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
      */
     suspend fun restoreDefaults() {
         dataStore.edit { prefs ->
-            writeVehicle(prefs, VehicleProfile.BYD_ATTO_2_COMFORT)
+            writeProfiles(prefs, listOf(VehicleProfile.BYD_ATTO_2_COMFORT))
+            prefs[Keys.ACTIVE_PROFILE_ID] = VehicleProfile.DEFAULT_ID
             writeThresholds(prefs, PriceThresholds.DEFAULT)
             prefs[Keys.ESTIMATION_MODE] = EstimationMode.DEFAULT.name
         }
@@ -89,6 +170,10 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         prefs[Keys.DC_LOSS] = vehicle.dcLossPercent
     }
 
+    private fun writeProfiles(prefs: MutablePreferences, profiles: List<VehicleProfile>) {
+        prefs[Keys.PROFILES] = json.encodeToString(profiles.map { it.toDto() })
+    }
+
     private fun writeThresholds(prefs: MutablePreferences, thresholds: PriceThresholds) {
         prefs[Keys.PRICE_VERY_CHEAP_MAX] = thresholds.veryCheapMax
         prefs[Keys.PRICE_GOOD_MAX] = thresholds.goodMax
@@ -98,25 +183,10 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
     /** Traduce las preferencias almacenadas al modelo de dominio. */
     private fun Preferences.toAppSettings(): AppSettings {
-        val defaultVehicle = VehicleProfile.BYD_ATTO_2_COMFORT
-        val vehicle = VehicleProfile(
-            id = VehicleProfile.DEFAULT_ID,
-            brand = this[Keys.VEHICLE_BRAND] ?: defaultVehicle.brand,
-            model = this[Keys.VEHICLE_MODEL] ?: defaultVehicle.model,
-            // Un valor ausente, no numérico (NaN/±Infinito) o no positivo se
-            // sustituye por el de fábrica: una capacidad o potencia a cero o en
-            // negativo dejaría la app en un estado inválido al releerla.
-            grossCapacityKWh = positiveOrDefault(this[Keys.GROSS_CAPACITY], defaultVehicle.grossCapacityKWh),
-            usableCapacityKWh = positiveOrDefault(this[Keys.USABLE_CAPACITY], defaultVehicle.usableCapacityKWh),
-            maxDcPowerKw = positiveOrDefault(this[Keys.MAX_DC_POWER], defaultVehicle.maxDcPowerKw),
-            maxAcPowerKw = positiveOrDefault(this[Keys.MAX_AC_POWER], defaultVehicle.maxAcPowerKw),
-            consumptionKWhPer100Km = positiveOrDefault(
-                this[Keys.CONSUMPTION],
-                defaultVehicle.consumptionKWhPer100Km,
-            ),
-            acLossPercent = lossPercentOrDefault(this[Keys.AC_LOSS], defaultVehicle.acLossPercent),
-            dcLossPercent = lossPercentOrDefault(this[Keys.DC_LOSS], defaultVehicle.dcLossPercent),
-        )
+        val profiles = profilesFrom(this)
+        val activeProfileId = this[Keys.ACTIVE_PROFILE_ID]
+            ?.takeIf { id -> profiles.any { it.id == id } }
+            ?: profiles.first().id
         val thresholds = PriceThresholds(
             veryCheapMax = this[Keys.PRICE_VERY_CHEAP_MAX] ?: PriceThresholds.DEFAULT.veryCheapMax,
             goodMax = this[Keys.PRICE_GOOD_MAX] ?: PriceThresholds.DEFAULT.goodMax,
@@ -134,11 +204,42 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
             parkingFeeEur = this[Keys.LAST_PARKING_FEE] ?: 0.0,
         )
         return AppSettings(
-            vehicle = vehicle,
+            profiles = profiles,
+            activeProfileId = activeProfileId,
             estimationMode = EstimationMode.fromName(this[Keys.ESTIMATION_MODE]),
-            // Unos umbrales incoherentes guardados por error no deben romper la app.
             priceThresholds = if (thresholds.isValid()) thresholds else PriceThresholds.DEFAULT,
             lastSession = lastSession,
+        )
+    }
+
+    /** Lee JSON nuevo o reconstruye el perfil de instalaciones anteriores. */
+    private fun profilesFrom(prefs: Preferences): List<VehicleProfile> {
+        val decoded = prefs[Keys.PROFILES]?.let { raw ->
+            runCatching { json.decodeFromString<List<VehicleProfileDto>>(raw).map { it.toDomain() } }
+                .getOrDefault(emptyList())
+        }.orEmpty().filter { it.isValid() }
+        return decoded.ifEmpty { listOf(legacyVehicleFrom(prefs)) }
+    }
+
+    private fun legacyVehicleFrom(prefs: Preferences): VehicleProfile {
+        val defaultVehicle = VehicleProfile.BYD_ATTO_2_COMFORT
+        return VehicleProfile(
+            id = VehicleProfile.DEFAULT_ID,
+            brand = prefs[Keys.VEHICLE_BRAND] ?: defaultVehicle.brand,
+            model = prefs[Keys.VEHICLE_MODEL] ?: defaultVehicle.model,
+            // Un valor ausente, no numérico (NaN/±Infinito) o no positivo se
+            // sustituye por el de fábrica: una capacidad o potencia a cero o en
+            // negativo dejaría la app en un estado inválido al releerla.
+            grossCapacityKWh = positiveOrDefault(prefs[Keys.GROSS_CAPACITY], defaultVehicle.grossCapacityKWh),
+            usableCapacityKWh = positiveOrDefault(prefs[Keys.USABLE_CAPACITY], defaultVehicle.usableCapacityKWh),
+            maxDcPowerKw = positiveOrDefault(prefs[Keys.MAX_DC_POWER], defaultVehicle.maxDcPowerKw),
+            maxAcPowerKw = positiveOrDefault(prefs[Keys.MAX_AC_POWER], defaultVehicle.maxAcPowerKw),
+            consumptionKWhPer100Km = positiveOrDefault(
+                prefs[Keys.CONSUMPTION],
+                defaultVehicle.consumptionKWhPer100Km,
+            ),
+            acLossPercent = lossPercentOrDefault(prefs[Keys.AC_LOSS], defaultVehicle.acLossPercent),
+            dcLossPercent = lossPercentOrDefault(prefs[Keys.DC_LOSS], defaultVehicle.dcLossPercent),
         )
     }
 
@@ -164,6 +265,8 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         val CONSUMPTION = doublePreferencesKey("vehicle_consumption")
         val AC_LOSS = doublePreferencesKey("vehicle_ac_loss")
         val DC_LOSS = doublePreferencesKey("vehicle_dc_loss")
+        val PROFILES = stringPreferencesKey("vehicle_profiles")
+        val ACTIVE_PROFILE_ID = stringPreferencesKey("active_vehicle_profile_id")
 
         val ESTIMATION_MODE = stringPreferencesKey("estimation_mode")
 

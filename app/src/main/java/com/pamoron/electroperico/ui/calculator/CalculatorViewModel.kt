@@ -16,6 +16,7 @@ import com.pamoron.electroperico.domain.model.CalculationOutcome
 import com.pamoron.electroperico.domain.model.ChargerOption
 import com.pamoron.electroperico.domain.model.HistoryEntry
 import com.pamoron.electroperico.domain.model.CurrentType
+import com.pamoron.electroperico.domain.ocr.ChargerTextCandidates
 import com.pamoron.electroperico.ui.format.Formatters
 import java.util.UUID
 import kotlinx.coroutines.FlowPreview
@@ -126,6 +127,16 @@ class CalculatorViewModel(
 
     fun onParkingFeeChange(value: String) =
         _inputs.update { it.copy(parkingFeeText = value.sanitize()) }
+
+    /** Aplica únicamente los valores que la persona ha confirmado en el lector OCR. */
+    fun onOcrValuesConfirmed(values: ChargerTextCandidates) = _inputs.update { current ->
+        current.copy(
+            priceText = values.pricePerKWh?.let(Formatters::toEditableText) ?: current.priceText,
+            powerText = values.chargerPowerKw?.let(Formatters::toEditableText) ?: current.powerText,
+            pricePerMinuteText = values.pricePerMinuteEur?.let(Formatters::toEditableText)
+                ?: current.pricePerMinuteText,
+        )
+    }
 
     fun onToggleExtras() = _inputs.update { it.copy(extrasExpanded = !it.extrasExpanded) }
 

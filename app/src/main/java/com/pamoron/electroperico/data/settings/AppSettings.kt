@@ -8,16 +8,21 @@ import com.pamoron.electroperico.domain.model.VehicleProfile
 /**
  * Ajustes persistentes de la aplicación.
  *
- * En esta primera fase hay un único perfil de vehículo. Cuando se admitan
- * varios, [vehicle] pasará a ser "el perfil activo" y la lista completa se
- * guardará en una base de datos.
+ * Los perfiles se guardan como una lista, pero los cálculos siguen recibiendo
+ * solamente [vehicle], que es el perfil activo. Así el dominio no necesita
+ * conocer ni la persistencia ni la interfaz de selección.
  */
 data class AppSettings(
-    val vehicle: VehicleProfile = VehicleProfile.BYD_ATTO_2_COMFORT,
+    val profiles: List<VehicleProfile> = listOf(VehicleProfile.BYD_ATTO_2_COMFORT),
+    val activeProfileId: String = VehicleProfile.DEFAULT_ID,
     val estimationMode: EstimationMode = EstimationMode.DEFAULT,
     val priceThresholds: PriceThresholds = PriceThresholds.DEFAULT,
     val lastSession: LastSession = LastSession(),
-)
+) {
+    /** Perfil que usan la calculadora, el comparador y las ediciones del historial. */
+    val vehicle: VehicleProfile
+        get() = profiles.firstOrNull { it.id == activeProfileId } ?: profiles.first()
+}
 
 /**
  * Últimos valores introducidos en la calculadora.

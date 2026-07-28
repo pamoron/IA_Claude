@@ -1,5 +1,4 @@
 package com.pamoron.electroperico.ui.comparator
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -25,7 +24,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,11 +52,9 @@ import com.pamoron.electroperico.domain.model.ChargerOption
 import com.pamoron.electroperico.domain.model.ComparedOption
 import com.pamoron.electroperico.domain.model.Comparison
 import com.pamoron.electroperico.domain.model.ComparisonSort
-import com.pamoron.electroperico.ui.calculator.components.CurrentTypeSelector
 import com.pamoron.electroperico.ui.calculator.components.DetailRow
-import com.pamoron.electroperico.ui.calculator.components.NumberField
-import com.pamoron.electroperico.ui.calculator.components.SocSection
 import com.pamoron.electroperico.ui.common.AppFooter
+import com.pamoron.electroperico.ui.common.ChargerFormDialog
 import com.pamoron.electroperico.ui.common.RatingTone
 import com.pamoron.electroperico.ui.common.colors
 import com.pamoron.electroperico.ui.common.labelRes
@@ -173,8 +169,13 @@ fun ComparatorScreen(
 
     val editing = state.editing
     if (editing != null) {
-        OptionDialog(
+        ChargerFormDialog(
             form = editing,
+            titleRes = if (editing.isEditing) {
+                R.string.titulo_editar_opcion
+            } else {
+                R.string.titulo_nueva_opcion
+            },
             onChange = viewModel::onFormChange,
             onStartSocChange = viewModel::onStartSocChange,
             onTargetSocChange = viewModel::onTargetSocChange,
@@ -183,7 +184,6 @@ fun ComparatorScreen(
         )
     }
 }
-
 /** Mensaje cuando todavía no hay nada guardado. */
 @Composable
 private fun EmptyState(modifier: Modifier = Modifier) {
@@ -223,7 +223,6 @@ private fun SortSelector(
         }
     }
 }
-
 /** Tarjeta de una opción calculada, con sus distintivos. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -443,98 +442,3 @@ private fun BalanceExplanation(modifier: Modifier = Modifier) {
     }
 }
 
-/** Formulario de alta o edición de una opción. */
-@Composable
-private fun OptionDialog(
-    form: OptionForm,
-    onChange: ((OptionForm) -> OptionForm) -> Unit,
-    onStartSocChange: (Int) -> Unit,
-    onTargetSocChange: (Int) -> Unit,
-    onSave: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                stringResource(
-                    if (form.isEditing) {
-                        R.string.titulo_editar_opcion
-                    } else {
-                        R.string.titulo_nueva_opcion
-                    },
-                ),
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                NumberField(
-                    value = form.name,
-                    onValueChange = { value -> onChange { it.copy(name = value) } },
-                    labelRes = R.string.campo_nombre_operador,
-                    unit = "",
-                    numeric = false,
-                )
-                NumberField(
-                    value = form.priceText,
-                    onValueChange = { value -> onChange { it.copy(priceText = value) } },
-                    labelRes = R.string.campo_precio,
-                    unit = stringResource(R.string.unidad_euro_kwh),
-                )
-                NumberField(
-                    value = form.powerText,
-                    onValueChange = { value -> onChange { it.copy(powerText = value) } },
-                    labelRes = R.string.campo_potencia,
-                    unit = stringResource(R.string.unidad_kw),
-                )
-                CurrentTypeSelector(
-                    selected = form.currentType,
-                    onSelect = { type -> onChange { it.copy(currentType = type) } },
-                )
-                SocSection(
-                    startSoc = form.startSoc,
-                    targetSoc = form.targetSoc,
-                    onStartChange = onStartSocChange,
-                    onTargetChange = onTargetSocChange,
-                    onSwap = {
-                        onChange { it.copy(startSoc = it.targetSoc, targetSoc = it.startSoc) }
-                    },
-                )
-                NumberField(
-                    value = form.startFeeText,
-                    onValueChange = { value -> onChange { it.copy(startFeeText = value) } },
-                    labelRes = R.string.campo_coste_inicio,
-                    unit = stringResource(R.string.unidad_euro),
-                )
-                NumberField(
-                    value = form.pricePerMinuteText,
-                    onValueChange = { value -> onChange { it.copy(pricePerMinuteText = value) } },
-                    labelRes = R.string.campo_coste_minuto,
-                    unit = stringResource(R.string.unidad_euro_min),
-                )
-                NumberField(
-                    value = form.parkingFeeText,
-                    onValueChange = { value -> onChange { it.copy(parkingFeeText = value) } },
-                    labelRes = R.string.campo_coste_estacionamiento,
-                    unit = stringResource(R.string.unidad_euro),
-                    isLast = true,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onSave, enabled = form.toOption() != null) {
-                Text(stringResource(R.string.accion_guardar))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.accion_cancelar))
-            }
-        },
-    )
-}

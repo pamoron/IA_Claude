@@ -14,8 +14,12 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -83,6 +87,42 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SectionTitle(R.string.titulo_perfil_vehiculo)
+
+            Text(
+                text = stringResource(R.string.ayuda_perfiles_vehiculo),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                state.profiles.forEach { profile ->
+                    FilterChip(
+                        selected = profile.id == state.activeProfileId,
+                        onClick = { viewModel.onProfileSelect(profile.id) },
+                        label = { Text(profile.displayName) },
+                    )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = viewModel::onAddProfile, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Filled.Add, contentDescription = null)
+                    Spacer(Modifier.padding(horizontal = 3.dp))
+                    Text(stringResource(R.string.accion_anadir_perfil))
+                }
+                OutlinedButton(onClick = viewModel::onDuplicateProfile, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Filled.ContentCopy, contentDescription = null)
+                    Spacer(Modifier.padding(horizontal = 3.dp))
+                    Text(stringResource(R.string.accion_duplicar))
+                }
+                IconButton(
+                    onClick = viewModel::onDeleteProfile,
+                    enabled = state.canDeleteProfile,
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.accion_eliminar_perfil),
+                    )
+                }
+            }
 
             val form = state.vehicleForm
 

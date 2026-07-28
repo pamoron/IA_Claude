@@ -38,12 +38,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.material3.Surface
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pamoron.electroperico.R
@@ -68,6 +74,7 @@ import com.pamoron.electroperico.ui.common.shortLabelRes
 import com.pamoron.electroperico.ui.common.textRes
 import com.pamoron.electroperico.ui.common.tone
 import com.pamoron.electroperico.ui.format.Formatters
+import com.pamoron.electroperico.ui.ocr.OcrScannerScreen
 
 /**
  * Pantalla principal.
@@ -89,6 +96,7 @@ fun CalculatorScreen(
     val message by viewModel.message.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
+    var ocrOpen by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.start() }
 
@@ -149,6 +157,13 @@ fun CalculatorScreen(
                 usableCapacity = Formatters.energy(state.vehicle.usableCapacityKWh),
                 onClick = onOpenSettings,
             )
+
+            OutlinedButton(
+                onClick = { ocrOpen = true },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+            ) {
+                Text(stringResource(R.string.accion_leer_con_camara))
+            }
 
             NumberField(
                 value = state.inputs.priceText,
@@ -237,6 +252,23 @@ fun CalculatorScreen(
             AppFooter()
 
             Spacer(Modifier.height(16.dp))
+        }
+    }
+
+    if (ocrOpen) {
+        Dialog(
+            onDismissRequest = { ocrOpen = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+        ) {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                OcrScannerScreen(
+                    onApply = {
+                        viewModel.onOcrValuesConfirmed(it)
+                        ocrOpen = false
+                    },
+                    onDismiss = { ocrOpen = false },
+                )
+            }
         }
     }
 }

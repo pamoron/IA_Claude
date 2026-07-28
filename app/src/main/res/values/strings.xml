@@ -43,6 +43,16 @@
     <string name="accion_volver">Volver</string>
     <string name="accion_guardar">Guardar</string>
     <string name="accion_restaurar">Restaurar</string>
+    <string name="accion_leer_con_camara">Leer precio y potencia con cámara</string>
+    <string name="titulo_lector_camara">Leer datos del cargador</string>
+    <string name="ayuda_lector_camara">Apunta a la tarifa y potencia del cargador. La imagen se analiza solo en este dispositivo.</string>
+    <string name="permiso_camara_denegado">Necesitas permitir la cámara para leer los datos del cargador.</string>
+    <string name="titulo_confirmar_lectura">Confirmar lectura</string>
+    <string name="texto_confirmar_lectura">Comprueba los valores detectados antes de aplicarlos. Puedes cancelarlos y escribirlos a mano.</string>
+    <string name="accion_aplicar_lectura">Aplicar valores</string>
+    <string name="lectura_precio">Precio: %1$s</string>
+    <string name="lectura_potencia">Potencia: %1$s</string>
+    <string name="lectura_coste_minuto">Coste por minuto: %1$s</string>
 
     <!-- Resultados destacados -->
     <string name="resultado_coste_estimado">Coste estimado</string>
@@ -122,6 +132,9 @@
     <!-- Ajustes -->
     <string name="titulo_ajustes">Ajustes</string>
     <string name="titulo_perfil_vehiculo">Perfil del vehículo</string>
+    <string name="ayuda_perfiles_vehiculo">El perfil seleccionado se usa en la calculadora, el comparador y al editar recargas del historial.</string>
+    <string name="accion_anadir_perfil">Añadir perfil</string>
+    <string name="accion_eliminar_perfil">Eliminar perfil activo</string>
     <string name="campo_marca">Marca</string>
     <string name="campo_modelo">Modelo</string>
     <string name="campo_capacidad_bruta">Capacidad bruta</string>

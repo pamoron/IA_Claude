@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Solo se solicita al abrir el lector OCR, nunca al iniciar la app. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <!--
-      La aplicación no necesita ningún permiso: todo el cálculo es local y no
-      hay conexión a internet ni registro de usuario.
+      La cámara es opcional y se usa solo para leer texto localmente. No hay
+      conexión a internet ni registro de usuario.
     -->
 
     <application
