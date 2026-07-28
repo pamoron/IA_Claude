@@ -6,6 +6,10 @@ on:
   push:
   workflow_dispatch:
 
+# Necesario para publicar la versión descargable con el APK.
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Pruebas y APK de depuración
@@ -63,10 +67,22 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk \
              "apk/Electro_Perico-debug-${GITHUB_SHA::7}.apk"
 
-      - name: Publicar el APK
+      - name: Publicar el APK como artefacto
         uses: actions/upload-artifact@v4
         with:
           name: Electro_Perico-apk
           path: apk/*.apk
           if-no-files-found: error
           retention-days: 30
+
+      # Además del artefacto (que exige iniciar sesión en GitHub), se publica
+      # una versión con el APK adjunto, que sí tiene enlace de descarga directo.
+      - name: Publicar la versión descargable
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create apk-ultima \
+            --title "Electro_Perico · APK de prueba" \
+            --notes "APK de depuración compilado automáticamente desde la rama de desarrollo. Instálalo permitiendo *Instalar aplicaciones desconocidas*. Se sustituye en cada cambio." \
+            --prerelease 2>/dev/null || true
+          gh release upload apk-ultima apk/*.apk --clobber

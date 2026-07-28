@@ -10,16 +10,17 @@ a internet, sin registro y sin permisos.
 
 ---
 
-## Estado: fase 1
+## Estado
 
-Esta entrega contiene **solo la calculadora, los ajustes y las pruebas**, tal y como
-se pidió. Las fases siguientes están descritas al final del documento.
+La aplicación tiene cuatro pantallas conectadas: **calculadora**, **comparador**,
+**historial** y **ajustes**.
 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Calculadora, perfil de vehículo editable, pruebas unitarias | **Entregado** |
-| 2 | Comparador de hasta 5 cargadores | Pendiente |
-| 3 | Historial local y varios perfiles de vehículo | Pendiente |
+| 2 | Comparador de hasta 5 cargadores | **Entregado** |
+| 3 | Historial local de recargas | **Entregado** |
+| 3b | Varios perfiles de vehículo | Pendiente |
 | 4 | Lectura del precio y la potencia con la cámara (OCR) | Propuesta |
 
 ---
@@ -106,7 +107,7 @@ En Android Studio: clic derecho sobre `app/src/test/java` → **Run 'Tests in ..
 
 ### Cobertura actual
 
-**80 pruebas**, todas verdes, sobre el motor de cálculo y el formateo:
+**106 pruebas**, todas verdes, sobre el motor de cálculo, el comparador, el historial y el formateo:
 
 | Clase | Qué cubre |
 |---|---|
@@ -119,6 +120,8 @@ En Android Studio: clic derecho sobre `app/src/test/java` → **Run 'Tests in ..
 | `RatingsTest` | Umbrales de precio y clasificación de cargadores |
 | `MoneyTest` | Redondeo monetario con `BigDecimal` |
 | `FormattersTest` | Formato español de importes, energía, potencia y tiempo |
+| `ChargerComparatorTest` | Comparador: puntuación, empates, ordenaciones, opciones inválidas |
+| `HistorySortTest` | Historial: las tres ordenaciones y los favoritos |
 
 ---
 
@@ -126,13 +129,21 @@ En Android Studio: clic derecho sobre `app/src/test/java` → **Run 'Tests in ..
 
 Cada `push` dispara el flujo de trabajo **APK de Electro_Perico**
 (`.github/workflows/build-apk.yml`), que ejecuta las pruebas, compila la aplicación
-en los servidores de GitHub y publica el resultado.
+en los servidores de GitHub y publica el resultado de dos formas.
 
-1. Entra en la pestaña **Actions** del repositorio.
-2. Abre la ejecución más reciente de *APK de Electro_Perico*.
+### Enlace directo (lo más cómodo)
+
+**https://github.com/pamoron/IA_Claude/releases/tag/apk-ultima**
+
+Descarga el `.apk` desde ahí con el móvil e instálalo permitiendo *Instalar
+aplicaciones desconocidas* para el navegador o el gestor de archivos. Se sustituye
+en cada cambio, así que ese enlace siempre apunta a la última compilación.
+
+### Desde Actions
+
+1. Pestaña **Actions** del repositorio.
+2. Ejecución más reciente de *APK de Electro_Perico*.
 3. En **Artifacts**, descarga **`Electro_Perico-apk`** (un ZIP con el `.apk` dentro).
-4. Descomprime, pasa el `.apk` al móvil e instálalo permitiendo
-   *Instalar aplicaciones desconocidas* para la app desde la que lo abras.
 
 Los artefactos se conservan 30 días y requieren estar identificado en GitHub.
 
@@ -205,18 +216,70 @@ app/src/main/java/com/pamoron/electroperico/
 │  ├─ model/                    VehicleProfile, ChargeInput, ChargeResult, valoraciones…
 │  └─ calc/
 │     ├─ ChargeCalculator.kt    Motor de cálculo
+│     ├─ ChargerComparator.kt   Comparador y puntuación de equilibrio
 │     ├─ ChargeCurve.kt         Curva de carga por tramos
 │     └─ Money.kt               Redondeo monetario
 ├─ data/settings/               AppSettings, SettingsRepository (DataStore)
+├─ data/comparator/            ComparatorRepository (DataStore + JSON)
+├─ data/history/               HistoryRepository (DataStore + JSON)
 └─ ui/
    ├─ format/Formatters.kt      Formato español
    ├─ theme/                    Colores, tipografía, modo claro y oscuro
    ├─ navigation/               Grafo de navegación
    ├─ common/RatingUi.kt        Dominio → textos, iconos y colores
    ├─ common/AppFooter.kt       Pie de página común
+   ├─ common/ChargerFormDialog  Formulario de cargador (comparador e historial)
    ├─ calculator/               Pantalla principal, ViewModel, componentes
+   ├─ comparator/               Comparador de cargadores
+   ├─ history/                  Historial de recargas
    └─ settings/                 Pantalla de ajustes y su ViewModel
 ```
+
+---
+
+## Comparador de cargadores
+
+Guarda hasta **cinco** opciones y las calcula todas con el mismo perfil de vehículo.
+Cada opción lleva su nombre, precio, potencia, tipo de corriente, porcentajes y
+costes adicionales, y se puede editar, duplicar y borrar.
+
+### Puntuación de equilibrio precio-tiempo
+
+Entre las opciones comparadas se normaliza cada magnitud: la más barata recibe 100
+puntos de precio y la más cara 0; la más rápida recibe 100 puntos de tiempo y la más
+lenta 0. La puntuación final es:
+
+```
+equilibrio = 0,60 × puntuaciónPrecio + 0,40 × puntuaciónTiempo
+```
+
+Si todas las opciones empatan en una magnitud, todas reciben la puntuación máxima en
+ella, de modo que nadie queda penalizado sin motivo.
+
+Por construcción **suele ganar una opción intermedia**, no un extremo: un cargador
+baratísimo pero lento saca 60 puntos y uno rapidísimo pero caro saca 40, mientras que
+uno razonable en ambos ejes los supera. Es justo lo que se quiere de un equilibrio.
+
+Se destacan tres distintivos, que pueden recaer en la misma opción: **mejor precio**,
+**más rápido** y **mejor opción general**.
+
+Las opciones cuyos datos no permiten calcular no rompen la comparación: se apartan y
+se muestran aparte para poder corregirlas.
+
+---
+
+## Historial
+
+Registro local y opcional de las recargas simuladas, con fecha, operador, precio,
+potencia, porcentajes, coste y tiempo. No sale del dispositivo ni requiere registro.
+
+- **Editar**, **eliminar**, **duplicar** y **marcar como favorito**.
+- Tres ordenaciones: *recientes* (con los favoritos por delante), *más baratas* y
+  *mejor €/kWh*.
+- Las cifras se guardan como **fotografía del momento**: si más adelante se edita el
+  perfil del vehículo, una recarga ya registrada sigue contando lo que costó de
+  verdad. Al editarla sí se recalcula con el perfil actual, pero se conserva su fecha.
+- Tope de 200 entradas para que el fichero no crezca sin control.
 
 ---
 
@@ -359,8 +422,11 @@ precio y tiempo real estimado, y avisa cuando los kW sobrantes no aportan nada.
 6. **Formato español determinista**: `DecimalFormat` con símbolos fijos (coma decimal,
    punto de millares) en lugar de depender del ICU del dispositivo, y espacio duro
    antes del símbolo del euro.
-7. **Sin Room en la fase 1.** DataStore basta para un perfil y unas preferencias.
-   Room entrará con el historial y el comparador, que sí son colecciones.
+7. **Sin Room.** El comparador guarda cinco registros y el historial unas decenas:
+   no justifican una base de datos. Ambos se serializan a JSON con
+   `kotlinx.serialization` y se guardan en DataStore. El modelo de dominio se mantiene
+   libre de anotaciones gracias a objetos de transferencia en la capa de datos, y un
+   JSON corrupto se trata como lista vacía en lugar de impedir abrir la app.
 8. **Sin Hilt.** `AppContainer` manual y `viewModelFactory`: el proyecto compila sin
    procesadores de anotaciones y sin sus incompatibilidades de versión.
 9. **Los resultados se recalculan en vivo**, pero solo aparecen tras el primer
