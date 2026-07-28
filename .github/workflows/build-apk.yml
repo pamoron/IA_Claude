@@ -28,7 +28,16 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Pruebas unitarias
-        run: ./gradlew test --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew test --no-daemon --console=plain 2>&1 | tee build-tests.log || {
+            echo "================ ERRORES DE COMPILACION ================"
+            grep -E "^e: |^w: .*error" build-tests.log | head -40
+            echo "================ PRUEBAS FALLIDAS ======================"
+            grep -E "FAILED|expected:" build-tests.log | head -40
+            echo "======================================================="
+            exit 1
+          }
 
       - name: Publicar el informe de pruebas
         if: always()
@@ -39,7 +48,14 @@ jobs:
           if-no-files-found: ignore
 
       - name: Compilar el APK de depuración
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon --console=plain 2>&1 | tee build-apk.log || {
+            echo "================ ERRORES DE COMPILACION ================"
+            grep -E "^e: " build-apk.log | head -40
+            echo "======================================================="
+            exit 1
+          }
 
       - name: Renombrar el APK
         run: |

@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.pamoron.electroperico.data.comparator.ComparatorRepository
+import com.pamoron.electroperico.data.history.HistoryRepository
 import com.pamoron.electroperico.data.settings.SettingsRepository
 
 /** Ajustes, perfil del vehículo y última sesión. */
@@ -17,10 +18,15 @@ private val Context.comparatorDataStore: DataStore<Preferences> by preferencesDa
     name = "comparador",
 )
 
+/** Historial local de recargas. */
+private val Context.historyDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "historial",
+)
+
 /**
  * Contenedor de dependencias.
  *
- * Se prefiere una inyección manual sencilla a Hilt: la app tiene dos
+ * Se prefiere una inyección manual sencilla a Hilt: la app tiene tres
  * repositorios y unos pocos ViewModels, y así el proyecto compila sin
  * procesadores de anotaciones ni sus incompatibilidades de versión.
  */
@@ -34,5 +40,9 @@ class AppContainer(context: Context) {
 
     val comparatorRepository: ComparatorRepository by lazy {
         ComparatorRepository(appContext.comparatorDataStore)
+    }
+
+    val historyRepository: HistoryRepository by lazy {
+        HistoryRepository(appContext.historyDataStore)
     }
 }
