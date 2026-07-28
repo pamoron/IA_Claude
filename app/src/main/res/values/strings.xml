@@ -198,4 +198,18 @@
     <string name="mensaje_guardado_comparador">Guardado en el comparador.</string>
     <string name="mensaje_comparador_lleno">El comparador ya tiene cinco opciones.</string>
 
+
+    <!-- Historial -->
+    <string name="titulo_historial">Historial</string>
+    <string name="historial_vacio">Todavía no has guardado ninguna recarga. Cuando calcules una, pulsa \"Guardar en el historial\" para tenerla aquí.</string>
+    <string name="titulo_editar_recarga">Editar recarga</string>
+    <string name="orden_recientes">Recientes</string>
+    <string name="orden_mas_baratas">Más baratas</string>
+    <string name="orden_mejor_precio_efectivo">Mejor €/kWh</string>
+    <string name="accion_marcar_favorito">Marcar como favorito</string>
+    <string name="accion_quitar_favorito">Quitar de favoritos</string>
+    <string name="accion_historial">Abrir el historial</string>
+    <string name="accion_guardar_en_historial">Guardar en el historial</string>
+    <string name="mensaje_guardado_historial">Guardado en el historial.</string>
+
 </resources>

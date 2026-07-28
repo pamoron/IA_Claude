@@ -3,7 +3,9 @@ package com.pamoron.electroperico.ui.format
 import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.util.Calendar
 import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Formato de números en español.
@@ -77,6 +79,30 @@ object Formatters {
         val hours = minutes / 60
         val rest = minutes % 60
         return if (rest == 0) "$hours${NBSP}h" else "$hours${NBSP}h $rest${NBSP}min"
+    }
+
+    /**
+     * Abreviaturas de los meses.
+     *
+     * Se escriben a mano en lugar de usar los datos regionales del sistema para
+     * que la fecha se vea igual en cualquier dispositivo y las pruebas sean
+     * deterministas.
+     */
+    private val MESES = arrayOf(
+        "ene", "feb", "mar", "abr", "may", "jun",
+        "jul", "ago", "sep", "oct", "nov", "dic",
+    )
+
+    /** Fecha y hora de una recarga del historial: `28 jul 2026, 01:15`. */
+    fun dateTime(millis: Long, zone: TimeZone = TimeZone.getDefault()): String {
+        val cal = Calendar.getInstance(zone)
+        cal.timeInMillis = millis
+        val dia = cal.get(Calendar.DAY_OF_MONTH)
+        val mes = MESES[cal.get(Calendar.MONTH)]
+        val anio = cal.get(Calendar.YEAR)
+        val hora = cal.get(Calendar.HOUR_OF_DAY).toString().padStart(2, '0')
+        val minuto = cal.get(Calendar.MINUTE).toString().padStart(2, '0')
+        return "$dia $mes $anio, $hora:$minuto"
     }
 
     /**

@@ -7,11 +7,14 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.pamoron.electroperico.ElectroPericoApplication
 import com.pamoron.electroperico.data.comparator.ComparatorRepository
+import com.pamoron.electroperico.data.history.HistoryRepository
 import com.pamoron.electroperico.data.settings.AppSettings
 import com.pamoron.electroperico.data.settings.SettingsRepository
 import com.pamoron.electroperico.domain.calc.ChargeCalculator
+import com.pamoron.electroperico.domain.calc.Money
 import com.pamoron.electroperico.domain.model.CalculationOutcome
 import com.pamoron.electroperico.domain.model.ChargerOption
+import com.pamoron.electroperico.domain.model.HistoryEntry
 import com.pamoron.electroperico.domain.model.CurrentType
 import com.pamoron.electroperico.ui.format.Formatters
 import java.util.UUID
@@ -31,6 +34,7 @@ import kotlinx.coroutines.launch
 enum class CalculatorMessage {
     GUARDADO_EN_COMPARADOR,
     COMPARADOR_LLENO,
+    GUARDADO_EN_HISTORIAL,
 }
 
 /**
@@ -44,6 +48,7 @@ enum class CalculatorMessage {
 class CalculatorViewModel(
     private val repository: SettingsRepository,
     private val comparatorRepository: ComparatorRepository,
+    private val historyRepository: HistoryRepository,
 ) : ViewModel() {
 
     private val _inputs = MutableStateFlow(CalculatorInputs())
@@ -145,19 +150,48 @@ class CalculatorViewModel(
         _resultsRequested.value = true
     }
 
+    /** Guarda la simulación actual como una opción del comparador. */
+    fun onSaveToComparator() {
+        val option = currentOption() ?: return
+        viewModelScope.launch {
+            _message.value = if (comparatorRepository.upsert(option)) {
+                CalculatorMessage.GUARDADO_EN_COMPARADOR
+            } else {
+                CalculatorMessage.COMPARADOR_LLENO
+            }
+        }
+    }
+
+    /** Guarda la simulación actual en el historial local. */
+    fun onSaveToHistory() {
+        val option = currentOption() ?: return
+        val resultado = (uiState.value.calculation as? CalculationState.Listo)?.result ?: return
+        viewModelScope.launch {
+            historyRepository.upsert(
+                HistoryEntry.from(
+                    id = option.id,
+                    charger = option,
+                    result = resultado,
+                    timestampMillis = System.currentTimeMillis(),
+                ),
+            )
+            _message.value = CalculatorMessage.GUARDADO_EN_HISTORIAL
+        }
+    }
+
     /**
-     * Guarda la simulación actual como una opción del comparador.
+     * Construye una opción a partir de lo que hay escrito en la pantalla.
      *
      * El nombre se compone con la potencia y el precio, que es lo que permite
-     * reconocer el cargador de un vistazo; se puede cambiar luego al editarla.
+     * reconocer el cargador de un vistazo; se puede cambiar luego al editarlo.
      */
-    fun onSaveToComparator() {
+    private fun currentOption(): ChargerOption? {
         val inputs = _inputs.value
-        val input = inputs.toChargeInput() ?: return
-        val option = ChargerOption(
+        val input = inputs.toChargeInput() ?: return null
+        return ChargerOption(
             id = UUID.randomUUID().toString(),
             name = "${Formatters.power(input.chargerPowerKw)} · " +
-                Formatters.pricePerKWh(java.math.BigDecimal.valueOf(input.pricePerKWh)),
+                Formatters.pricePerKWh(Money.rate(input.pricePerKWh)),
             pricePerKWh = input.pricePerKWh,
             chargerPowerKw = input.chargerPowerKw,
             currentType = input.currentType,
@@ -167,13 +201,6 @@ class CalculatorViewModel(
             pricePerMinuteEur = input.pricePerMinuteEur,
             parkingFeeEur = input.parkingFeeEur,
         )
-        viewModelScope.launch {
-            _message.value = if (comparatorRepository.upsert(option)) {
-                CalculatorMessage.GUARDADO_EN_COMPARADOR
-            } else {
-                CalculatorMessage.COMPARADOR_LLENO
-            }
-        }
     }
 
     /** La pantalla avisa de que ya ha mostrado el mensaje. */
@@ -225,6 +252,7 @@ class CalculatorViewModel(
                 CalculatorViewModel(
                     repository = application.container.settingsRepository,
                     comparatorRepository = application.container.comparatorRepository,
+                    historyRepository = application.container.historyRepository,
                 )
             }
         }

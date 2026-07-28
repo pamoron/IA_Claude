@@ -21,6 +21,7 @@ import com.pamoron.electroperico.domain.model.ChargerRating
 import com.pamoron.electroperico.domain.model.ComparisonSort
 import com.pamoron.electroperico.domain.model.CurrentType
 import com.pamoron.electroperico.domain.model.EstimationMode
+import com.pamoron.electroperico.domain.model.HistorySort
 import com.pamoron.electroperico.domain.model.PriceRating
 import com.pamoron.electroperico.domain.model.ValidationError
 import com.pamoron.electroperico.ui.theme.LocalRatingColors
@@ -178,6 +179,14 @@ val ComparisonSort.labelRes: Int
         ComparisonSort.MAS_BARATO -> R.string.orden_mas_barato
         ComparisonSort.MAS_RAPIDO -> R.string.orden_mas_rapido
         ComparisonSort.MEJOR_EQUILIBRIO -> R.string.orden_mejor_equilibrio
+    }
+
+@get:StringRes
+val HistorySort.labelRes: Int
+    get() = when (this) {
+        HistorySort.RECIENTES -> R.string.orden_recientes
+        HistorySort.MAS_BARATAS -> R.string.orden_mas_baratas
+        HistorySort.MEJOR_PRECIO_EFECTIVO -> R.string.orden_mejor_precio_efectivo
     }
 
 @get:StringRes

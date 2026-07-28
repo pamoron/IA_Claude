@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Compare
 import androidx.compose.material.icons.filled.BookmarkAdd
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -81,6 +82,7 @@ import com.pamoron.electroperico.ui.format.Formatters
 fun CalculatorScreen(
     onOpenSettings: () -> Unit,
     onOpenComparator: () -> Unit,
+    onOpenHistory: () -> Unit,
     viewModel: CalculatorViewModel = viewModel(factory = CalculatorViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,12 +95,14 @@ fun CalculatorScreen(
     // Los avisos puntuales se muestran una sola vez.
     val guardado = stringResource(R.string.mensaje_guardado_comparador)
     val lleno = stringResource(R.string.mensaje_comparador_lleno)
+    val enHistorial = stringResource(R.string.mensaje_guardado_historial)
     LaunchedEffect(message) {
         val actual = message ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(
             when (actual) {
                 CalculatorMessage.GUARDADO_EN_COMPARADOR -> guardado
                 CalculatorMessage.COMPARADOR_LLENO -> lleno
+                CalculatorMessage.GUARDADO_EN_HISTORIAL -> enHistorial
             },
         )
         viewModel.onMessageShown()
@@ -109,6 +113,12 @@ fun CalculatorScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 actions = {
+                    IconButton(onClick = onOpenHistory) {
+                        Icon(
+                            imageVector = Icons.Filled.History,
+                            contentDescription = stringResource(R.string.accion_historial),
+                        )
+                    }
                     IconButton(onClick = onOpenComparator) {
                         Icon(
                             imageVector = Icons.Filled.Compare,
@@ -195,15 +205,30 @@ fun CalculatorScreen(
                     result = result,
                     estimationLabel = stringResource(state.estimationMode.shortLabelRes),
                 )
-                OutlinedButton(
-                    onClick = viewModel::onSaveToComparator,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(imageVector = Icons.Filled.BookmarkAdd, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.accion_guardar_en_comparador))
+                    OutlinedButton(
+                        onClick = viewModel::onSaveToComparator,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                    ) {
+                        Icon(imageVector = Icons.Filled.BookmarkAdd, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.accion_guardar_en_comparador))
+                    }
+                    OutlinedButton(
+                        onClick = viewModel::onSaveToHistory,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                    ) {
+                        Icon(imageVector = Icons.Filled.History, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.accion_guardar_en_historial))
+                    }
                 }
             }
 
