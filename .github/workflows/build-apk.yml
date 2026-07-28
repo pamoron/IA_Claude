@@ -64,8 +64,10 @@ jobs:
       - name: Renombrar el APK
         run: |
           mkdir -p apk
-          cp app/build/outputs/apk/debug/app-debug.apk \
-             "apk/Electro_Perico-debug-${GITHUB_SHA::7}.apk"
+          # Nombre fijo: así cada compilación sustituye a la anterior en la
+          # versión publicada en lugar de acumularse. El commit concreto va en
+          # las notas de la versión.
+          cp app/build/outputs/apk/debug/app-debug.apk apk/Electro_Perico.apk
 
       - name: Publicar el APK como artefacto
         uses: actions/upload-artifact@v4
@@ -81,8 +83,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          notas="APK de depuración compilado automáticamente desde la rama de desarrollo.
+
+          Commit: \`${GITHUB_SHA::7}\`
+
+          Instálalo permitiendo *Instalar aplicaciones desconocidas*. Se sustituye en cada cambio."
           gh release create apk-ultima \
             --title "Electro_Perico · APK de prueba" \
-            --notes "APK de depuración compilado automáticamente desde la rama de desarrollo. Instálalo permitiendo *Instalar aplicaciones desconocidas*. Se sustituye en cada cambio." \
-            --prerelease 2>/dev/null || true
-          gh release upload apk-ultima apk/*.apk --clobber
+            --notes "$notas" \
+            --prerelease 2>/dev/null || gh release edit apk-ultima --notes "$notas"
+          # Limpia los APK antiguos que quedaron de compilaciones anteriores.
+          gh release view apk-ultima --json assets \
+            --jq '.assets[].name | select(. != "Electro_Perico.apk")' \
+            | while read -r viejo; do gh release delete-asset apk-ultima "$viejo" --yes || true; done
+          gh release upload apk-ultima apk/Electro_Perico.apk --clobber

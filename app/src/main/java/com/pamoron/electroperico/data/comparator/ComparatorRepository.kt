@@ -13,9 +13,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
 
 /**
  * Versión serializable de una opción del comparador.
@@ -131,12 +132,22 @@ class ComparatorRepository(private val dataStore: DataStore<Preferences>) {
     private fun encode(options: List<ChargerOption>): String =
         json.encodeToString(options.map { it.toDto() })
 
-    /** Un JSON corrupto no debe impedir abrir la app: se trata como lista vacía. */
+    /**
+     * Un JSON corrupto no debe impedir abrir la app: se trata como lista vacía.
+     *
+     * Se decodifica elemento a elemento en lugar de la lista entera de una
+     * vez: si un único registro está dañado (por ejemplo, por un cambio de
+     * formato entre versiones), se descarta solo ese registro en vez de
+     * perder también el resto de opciones guardadas.
+     */
     private fun decode(raw: String?): List<ChargerOption> {
         if (raw.isNullOrBlank()) return emptyList()
-        return runCatching {
-            json.decodeFromString<List<ChargerOptionDto>>(raw).map { it.toDomain() }
-        }.getOrDefault(emptyList())
+        val elements = runCatching { json.parseToJsonElement(raw).jsonArray }.getOrNull()
+            ?: return emptyList()
+        return elements.mapNotNull { element ->
+            runCatching { json.decodeFromJsonElement<ChargerOptionDto>(element).toDomain() }
+                .getOrNull()
+        }
     }
 
     private object Keys {
