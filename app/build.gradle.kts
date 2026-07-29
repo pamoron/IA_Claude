@@ -14,8 +14,10 @@ android {
         // Android 9 (Pie) en adelante.
         minSdk = 28
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        // Se incrementa al publicar un APK instalable para que Android lo
+        // reconozca como actualización de la versión anterior.
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
