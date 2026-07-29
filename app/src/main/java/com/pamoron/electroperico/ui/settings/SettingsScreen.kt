@@ -36,8 +36,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -50,8 +52,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pamoron.electroperico.R
 import com.pamoron.electroperico.domain.model.EstimationMode
 import com.pamoron.electroperico.domain.model.VehicleProfile
+import com.pamoron.electroperico.data.update.GithubUpdateRepository
+import com.pamoron.electroperico.data.update.UpdateCheckResult
 import com.pamoron.electroperico.ui.common.AppFooter
 import com.pamoron.electroperico.ui.common.labelRes
+import android.content.Intent
+import android.net.Uri
+import kotlinx.coroutines.launch
 
 /**
  * Pantalla de configuración.
@@ -67,6 +74,9 @@ fun SettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showRecommendedModels by remember { mutableStateOf(false) }
+    var updateResult by remember { mutableStateOf<UpdateCheckResult?>(null) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { viewModel.load() }
 
@@ -93,6 +103,28 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            SectionTitle(R.string.titulo_actualizaciones)
+            OutlinedButton(
+                onClick = {
+                    scope.launch { updateResult = GithubUpdateRepository(context).check() }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(stringResource(R.string.accion_buscar_actualizacion)) }
+            when (val result = updateResult) {
+                is UpdateCheckResult.Available -> {
+                    Text(stringResource(R.string.actualizacion_disponible, result.update.version))
+                    Button(
+                        onClick = {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(result.update.downloadUrl)))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.accion_descargar_actualizacion)) }
+                }
+                UpdateCheckResult.Current -> Text(stringResource(R.string.actualizacion_actual))
+                UpdateCheckResult.Unavailable -> Text(stringResource(R.string.actualizacion_no_disponible))
+                null -> Unit
+            }
+
             SectionTitle(R.string.titulo_perfil_vehiculo)
 
             Text(

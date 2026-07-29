@@ -136,6 +136,12 @@
 
     <!-- Ajustes -->
     <string name="titulo_ajustes">Ajustes</string>
+    <string name="titulo_actualizaciones">Actualizaciones</string>
+    <string name="accion_buscar_actualizacion">Buscar actualización</string>
+    <string name="accion_descargar_actualizacion">Descargar actualización</string>
+    <string name="actualizacion_disponible">Hay una actualización disponible: %1$s</string>
+    <string name="actualizacion_actual">Ya tienes la última versión.</string>
+    <string name="actualizacion_no_disponible">No se ha podido comprobar la actualización. Inténtalo de nuevo.</string>
     <string name="titulo_perfil_vehiculo">Perfil del vehículo</string>
     <string name="ayuda_perfiles_vehiculo">El perfil seleccionado se usa en la calculadora, el comparador y al editar recargas del historial.</string>
     <string name="accion_anadir_perfil">Añadir perfil</string>

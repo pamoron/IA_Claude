@@ -279,29 +279,29 @@ private fun VehicleHeader(
         color = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.DirectionsCar,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-            )
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = stringResource(R.string.cabecera_vehiculo, vehicleName, usableCapacity),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Start,
-                modifier = Modifier.weight(1f),
-            )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.DirectionsCar, null, Modifier.size(24.dp))
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.cabecera_vehiculo, vehicleName, usableCapacity),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.weight(1f),
+                )
+                androidx.compose.foundation.Image(
+                    painter = painterResource(R.drawable.avatar_great),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)),
+                )
+            }
+            Spacer(Modifier.height(12.dp))
             androidx.compose.foundation.Image(
-                painter = painterResource(R.drawable.avatar_great),
+                painter = painterResource(R.drawable.vehicle_jaecoo_tron),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(14.dp)),
+                modifier = Modifier.fillMaxWidth().height(136.dp).clip(RoundedCornerShape(4.dp)),
             )
         }
     }

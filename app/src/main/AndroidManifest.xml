@@ -3,6 +3,7 @@
 
     <!-- Solo se solicita al abrir el lector OCR, nunca al iniciar la app. -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <!--
       La cámara es opcional y se usa solo para leer texto localmente. No hay

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.pamoron.electroperico.data.comparator.ComparatorRepository
 import com.pamoron.electroperico.data.history.HistoryRepository
 import com.pamoron.electroperico.data.settings.SettingsRepository
+import com.pamoron.electroperico.data.update.GithubUpdateRepository
 
 /** Ajustes, perfil del vehículo y última sesión. */
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(
@@ -45,4 +46,6 @@ class AppContainer(context: Context) {
     val historyRepository: HistoryRepository by lazy {
         HistoryRepository(appContext.historyDataStore)
     }
+
+    val githubUpdateRepository: GithubUpdateRepository by lazy { GithubUpdateRepository(appContext) }
 }
