@@ -6,15 +6,15 @@ import androidx.compose.ui.graphics.Color
 // Los colores nunca son el único medio de comunicar una valoración: siempre van
 // acompañados de icono y texto.
 
-val GreenPrimary = Color(0xFF006B63)
-val GreenOnPrimary = Color(0xFFFFFFFF)
-val GreenPrimaryContainer = Color(0xFFC7F4E7)
-val GreenOnPrimaryContainer = Color(0xFF00201C)
+val GreenPrimary = Color(0xFF00E5FF)
+val GreenOnPrimary = Color(0xFF001014)
+val GreenPrimaryContainer = Color(0xFF003E47)
+val GreenOnPrimaryContainer = Color(0xFF8FF5FF)
 
-val GreenPrimaryDark = Color(0xFF76DBC8)
-val GreenOnPrimaryDark = Color(0xFF003731)
-val GreenPrimaryContainerDark = Color(0xFF005047)
-val GreenOnPrimaryContainerDark = Color(0xFFC7F4E7)
+val GreenPrimaryDark = GreenPrimary
+val GreenOnPrimaryDark = GreenOnPrimary
+val GreenPrimaryContainerDark = GreenPrimaryContainer
+val GreenOnPrimaryContainerDark = GreenOnPrimaryContainer
 
 val BlueSecondary = Color(0xFF4A6363)
 val BlueOnSecondary = Color(0xFFFFFFFF)
@@ -28,10 +28,10 @@ val BlueOnSecondaryContainerDark = Color(0xFFCCE8E7)
 
 // Acento eléctrico de Stitch. Se reserva para llamadas a la acción y nunca se
 // usa como único indicador de estado.
-val ElectricAccent = Color(0xFFF7C948)
-val OnElectricAccent = Color(0xFF2A2100)
-val ElectricAccentContainer = Color(0xFFFFE9A9)
-val OnElectricAccentContainer = Color(0xFF241A00)
+val ElectricAccent = Color(0xFFFFD740)
+val OnElectricAccent = Color(0xFF241A00)
+val ElectricAccentContainer = Color(0xFF3A3000)
+val OnElectricAccentContainer = Color(0xFFFFE082)
 val ElectricAccentDark = Color(0xFFFFDA6A)
 val OnElectricAccentDark = Color(0xFF3A2E00)
 val ElectricAccentContainerDark = Color(0xFF554500)
@@ -47,17 +47,17 @@ val OnErrorDark = Color(0xFF690005)
 val ErrorContainerDark = Color(0xFF93000A)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
-val BackgroundLight = Color(0xFFF7FAF8)
-val OnBackgroundLight = Color(0xFF191C1C)
-val SurfaceVariantLight = Color(0xFFDAE5E4)
-val OnSurfaceVariantLight = Color(0xFF3F4949)
-val OutlineLight = Color(0xFF6F7979)
+val BackgroundLight = Color(0xFF030706)
+val OnBackgroundLight = Color(0xFFE5F5F3)
+val SurfaceVariantLight = Color(0xFF0A1111)
+val OnSurfaceVariantLight = Color(0xFFB5C9C6)
+val OutlineLight = Color(0xFF31504D)
 
-val BackgroundDark = Color(0xFF101B19)
-val OnBackgroundDark = Color(0xFFE0E3E2)
-val SurfaceVariantDark = Color(0xFF3F4949)
-val OnSurfaceVariantDark = Color(0xFFBEC9C8)
-val OutlineDark = Color(0xFF889392)
+val BackgroundDark = BackgroundLight
+val OnBackgroundDark = OnBackgroundLight
+val SurfaceVariantDark = SurfaceVariantLight
+val OnSurfaceVariantDark = OnSurfaceVariantLight
+val OutlineDark = OutlineLight
 
 // --- Colores de valoración --------------------------------------------------
 // Se usan como fondo de contenedor de las etiquetas de valoración.
