@@ -29,16 +29,18 @@ class GithubUpdateRepository(private val context: Context) {
                 setRequestProperty("Accept", "application/vnd.github+json")
                 setRequestProperty("User-Agent", "Electro-Perico-Android")
             }
-            connection.use { response ->
-                if (response.responseCode !in 200..299) return@withContext UpdateCheckResult.Unavailable
+            try {
+                if (connection.responseCode !in 200..299) return@runCatching UpdateCheckResult.Unavailable
                 val root = Json.parseToJsonElement(response.inputStream.bufferedReader().readText()).jsonObject
                 val version = root["tag_name"]?.jsonPrimitive?.content.orEmpty().removePrefix("v")
                 val apk = root["assets"]?.jsonArray
                     ?.firstOrNull { it.jsonObject["name"]?.jsonPrimitive?.content == "Electro_Perico.apk" }
                     ?.jsonObject?.get("browser_download_url")?.jsonPrimitive?.content
-                    ?: return@withContext UpdateCheckResult.Unavailable
+                    ?: return@runCatching UpdateCheckResult.Unavailable
                 if (isNewer(version, installedVersion())) UpdateCheckResult.Available(AvailableUpdate(version, apk))
                 else UpdateCheckResult.Current
+            } finally {
+                connection.disconnect()
             }
         }.getOrDefault(UpdateCheckResult.Unavailable)
     }
