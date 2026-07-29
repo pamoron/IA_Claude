@@ -66,7 +66,7 @@ private fun VehicleProfile.isValid(): Boolean =
     id.isNotBlank() && (brand.isNotBlank() || model.isNotBlank()) &&
         grossCapacityKWh.isFinite() && grossCapacityKWh > 0.0 &&
         usableCapacityKWh.isFinite() && usableCapacityKWh > 0.0 &&
-        maxDcPowerKw.isFinite() && maxDcPowerKw > 0.0 &&
+        maxDcPowerKw.isFinite() && maxDcPowerKw >= 0.0 &&
         maxAcPowerKw.isFinite() && maxAcPowerKw > 0.0 &&
         consumptionKWhPer100Km.isFinite() && consumptionKWhPer100Km > 0.0 &&
         acLossPercent.isFinite() && acLossPercent >= 0.0 && acLossPercent < 100.0 &&

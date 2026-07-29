@@ -115,6 +115,22 @@ class VehicleProfileTest {
         assertEquals(0.12, comfort.lossFractionFor(CurrentType.AC), 1e-9)
     }
 
+    @Test
+    fun `los modelos recomendados tienen identificadores distintos y potencia de carga valida`() {
+        val models = VehicleProfile.RECOMMENDED_PROFILES
+        assertEquals(4, models.size)
+        assertEquals(models.size, models.map { it.id }.distinct().size)
+        assertTrue(models.all { it.maxAcPowerKw > 0.0 })
+        assertTrue(models.all { it.maxDcPowerKw >= 0.0 })
+    }
+
+    @Test
+    fun `el Tucson PHEV solo declara carga en alterna`() {
+        val tucson = VehicleProfile.HYUNDAI_TUCSON_PHEV
+        assertEquals(7.2, tucson.maxPowerKwFor(CurrentType.AC), 0.0)
+        assertEquals(0.0, tucson.maxPowerKwFor(CurrentType.DC), 0.0)
+    }
+
     // -----------------------------------------------------------------------
     // PriceThresholds
     // -----------------------------------------------------------------------

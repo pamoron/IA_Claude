@@ -49,7 +49,12 @@ data class VehicleForm(
         // poder guardarse hasta que el usuario lo retocara a mano.
         val gross = Formatters.parseDecimal(grossCapacity)?.takeIf { it > 0.0 } ?: return null
         val usable = Formatters.parseDecimal(usableCapacity)?.takeIf { it > 0.0 } ?: return null
-        val dc = Formatters.parseDecimal(maxDcPower)?.takeIf { it > 0.0 } ?: return null
+        // Algunos PHEV solo admiten carga en AC. Un campo DC vacío equivale a 0
+        // para que siga siendo cómodo editar esos perfiles.
+        val dc = when {
+            maxDcPower.isBlank() -> 0.0
+            else -> Formatters.parseDecimal(maxDcPower)?.takeIf { it >= 0.0 } ?: return null
+        }
         val ac = Formatters.parseDecimal(maxAcPower)?.takeIf { it > 0.0 } ?: return null
         val avg = Formatters.parseDecimal(consumption)?.takeIf { it > 0.0 } ?: return null
         val lossAc = Formatters.parseDecimal(acLoss)?.takeIf { it >= 0.0 && it < 100.0 } ?: return null
@@ -191,6 +196,18 @@ class SettingsViewModel(
                 model = "${current.model} (nuevo)".trim(),
             )
             repository.updateVehicle(newProfile)
+            refreshForms()
+        }
+    }
+
+    /** Añade un modelo de referencia o lo selecciona si ya estaba guardado. */
+    fun onAddRecommendedProfile(profile: VehicleProfile) {
+        viewModelScope.launch {
+            if (_forms.value.profiles.none { it.id == profile.id }) {
+                repository.updateVehicle(profile)
+            } else {
+                repository.selectProfile(profile.id)
+            }
             refreshForms()
         }
     }

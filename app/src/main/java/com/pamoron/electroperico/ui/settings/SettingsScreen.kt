@@ -17,6 +17,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -32,6 +34,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -44,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pamoron.electroperico.R
 import com.pamoron.electroperico.domain.model.EstimationMode
+import com.pamoron.electroperico.domain.model.VehicleProfile
 import com.pamoron.electroperico.ui.common.AppFooter
 import com.pamoron.electroperico.ui.common.labelRes
 
@@ -60,6 +66,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showRecommendedModels by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.load() }
 
@@ -123,6 +130,24 @@ fun SettingsScreen(
                     )
                 }
             }
+            OutlinedButton(
+                onClick = { showRecommendedModels = true },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Filled.DirectionsCar, contentDescription = null)
+                Spacer(Modifier.padding(horizontal = 4.dp))
+                Text(stringResource(R.string.accion_anadir_modelo_recomendado))
+            }
+
+            if (showRecommendedModels) {
+                RecommendedModelsDialog(
+                    onDismiss = { showRecommendedModels = false },
+                    onSelect = { profile ->
+                        viewModel.onAddRecommendedProfile(profile)
+                        showRecommendedModels = false
+                    },
+                )
+            }
 
             val form = state.vehicleForm
 
@@ -163,6 +188,7 @@ fun SettingsScreen(
                 },
                 labelRes = R.string.campo_potencia_maxima_dc,
                 unit = stringResource(R.string.unidad_kw),
+                supportingRes = R.string.ayuda_potencia_dc,
             )
             SettingsTextField(
                 value = form.maxAcPower,
@@ -303,6 +329,39 @@ fun SettingsScreen(
             Spacer(Modifier.height(16.dp))
         }
     }
+}
+
+/** Selector de modelos precargados, sin reemplazar perfiles creados por la persona usuaria. */
+@Composable
+private fun RecommendedModelsDialog(
+    onDismiss: () -> Unit,
+    onSelect: (VehicleProfile) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.titulo_modelos_recomendados)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.ayuda_modelos_recomendados),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                VehicleProfile.RECOMMENDED_PROFILES.forEach { profile ->
+                    OutlinedButton(
+                        onClick = { onSelect(profile) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(profile.displayName)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text(stringResource(R.string.accion_cancelar))
+            }
+        },
+    )
 }
 
 /** Título de una sección de ajustes. */

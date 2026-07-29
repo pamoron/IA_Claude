@@ -134,6 +134,9 @@
     <string name="titulo_perfil_vehiculo">Perfil del vehículo</string>
     <string name="ayuda_perfiles_vehiculo">El perfil seleccionado se usa en la calculadora, el comparador y al editar recargas del historial.</string>
     <string name="accion_anadir_perfil">Añadir perfil</string>
+    <string name="accion_anadir_modelo_recomendado">Añadir modelo recomendado</string>
+    <string name="titulo_modelos_recomendados">Elige un modelo</string>
+    <string name="ayuda_modelos_recomendados">Las especificaciones son valores de referencia y puedes corregirlas antes de guardar.</string>
     <string name="accion_eliminar_perfil">Eliminar perfil activo</string>
     <string name="campo_marca">Marca</string>
     <string name="campo_modelo">Modelo</string>
@@ -142,6 +145,7 @@
     <string name="campo_capacidad_util">Capacidad útil</string>
     <string name="ayuda_capacidad_util">Es la energía realmente disponible entre el 0 y el 100 %.</string>
     <string name="campo_potencia_maxima_dc">Potencia máxima en continua</string>
+    <string name="ayuda_potencia_dc">Déjalo vacío si el vehículo no admite carga en continua.</string>
     <string name="campo_potencia_maxima_ac">Potencia máxima en alterna</string>
     <string name="campo_consumo">Consumo medio</string>
     <string name="campo_perdidas_ac">Pérdidas en alterna</string>
@@ -165,7 +169,7 @@
     <string name="campo_umbral_caro">Hasta aquí, caro</string>
 
     <string name="error_umbrales_crecientes">Los umbrales deben ser positivos y estar ordenados de menor a mayor.</string>
-    <string name="error_perfil_incompleto">Revisa el perfil: la capacidad útil, las potencias y el consumo deben ser mayores que cero.</string>
+    <string name="error_perfil_incompleto">Revisa el perfil: la capacidad útil, la potencia en AC y el consumo deben ser mayores que cero.</string>
     <string name="mensaje_guardado">Cambios guardados.</string>
     <string name="nota_fases_siguientes">Próximas fases: comparador de cargadores, historial de recargas y varios perfiles de vehículo.</string>
 

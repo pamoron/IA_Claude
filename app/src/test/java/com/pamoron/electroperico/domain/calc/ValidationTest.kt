@@ -114,6 +114,20 @@ class ValidationTest {
     }
 
     @Test
+    fun `un PHEV sin carga rapida puede calcular en AC pero no en DC`() {
+        val tucson = TestFixtures.vehicle.copy(maxDcPowerKw = 0.0, maxAcPowerKw = 7.2)
+        TestFixtures.success(
+            TestFixtures.input(currentType = CurrentType.AC, chargerPowerKw = 7.4),
+            tucson,
+        )
+        val erroresDc = TestFixtures.failure(
+            TestFixtures.input(currentType = CurrentType.DC, chargerPowerKw = 50.0),
+            tucson,
+        ).errors
+        assertTrue(erroresDc.contains(ValidationError.POTENCIA_VEHICULO_INVALIDA))
+    }
+
+    @Test
     fun `una sesion muy corta nunca se muestra como cero minutos`() {
         val resultado = TestFixtures.success(
             TestFixtures.input(startSocPercent = 50.0, targetSocPercent = 50.1),
