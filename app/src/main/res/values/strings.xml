@@ -5,7 +5,7 @@
 -->
 <resources>
 
-    <string name="app_name">Electro_Perico</string>
+    <string name="app_name">Electro Perico</string>
 
     <!-- Unidades -->
     <string name="unidad_euro_kwh">€/kWh</string>

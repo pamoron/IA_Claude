@@ -13,14 +13,14 @@ android {
         // Variante de instalación limpia: evita el conflicto de firma con los
         // APK anteriores distribuidos por GitHub Actions. Conserva el mismo
         // código, recursos y logo, pero Android la reconoce como una app nueva.
-        applicationId = "com.pamoron.electroperico.stitch"
+        applicationId = "com.pamoron.electroperico.perico"
         // Android 9 (Pie) en adelante.
         minSdk = 28
         targetSdk = 35
         // Se incrementa al publicar un APK instalable para que Android lo
         // reconozca como actualización de la versión anterior.
         versionCode = 1
-        versionName = "1.1.0-stitch"
+        versionName = "1.1.1-perico"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
