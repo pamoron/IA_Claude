@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -23,6 +24,8 @@ import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -158,30 +164,14 @@ fun CalculatorScreen(
                 onClick = onOpenSettings,
             )
 
-            OutlinedButton(
-                onClick = { ocrOpen = true },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-            ) {
-                Text(stringResource(R.string.accion_leer_con_camara))
-            }
-
-            NumberField(
-                value = state.inputs.priceText,
-                onValueChange = viewModel::onPriceChange,
-                labelRes = R.string.campo_precio,
-                unit = stringResource(R.string.unidad_euro_kwh),
-            )
-
-            NumberField(
-                value = state.inputs.powerText,
-                onValueChange = viewModel::onPowerChange,
-                labelRes = R.string.campo_potencia,
-                unit = stringResource(R.string.unidad_kw),
-            )
-
-            CurrentTypeSelector(
-                selected = state.inputs.currentType,
-                onSelect = viewModel::onCurrentTypeChange,
+            ChargerDataCard(
+                priceText = state.inputs.priceText,
+                powerText = state.inputs.powerText,
+                currentType = state.inputs.currentType,
+                onPriceChange = viewModel::onPriceChange,
+                onPowerChange = viewModel::onPowerChange,
+                onCurrentTypeChange = viewModel::onCurrentTypeChange,
+                onOpenCamera = { ocrOpen = true },
             )
 
             SocSection(
@@ -274,6 +264,7 @@ fun CalculatorScreen(
 }
 
 /** Cabecera con el vehículo activo; toda ella lleva a los ajustes. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun VehicleHeader(
     vehicleName: String,
@@ -281,22 +272,70 @@ private fun VehicleHeader(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    TextButton(
+    Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
     ) {
-        Icon(
-            imageVector = Icons.Filled.DirectionsCar,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = stringResource(R.string.cabecera_vehiculo, vehicleName, usableCapacity),
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.weight(1f),
-        )
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.DirectionsCar,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = stringResource(R.string.cabecera_vehiculo, vehicleName, usableCapacity),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f),
+            )
+            androidx.compose.foundation.Image(
+                painter = painterResource(R.drawable.avatar_great),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(14.dp)),
+            )
+        }
+    }
+}
+
+/** Datos esenciales agrupados como una única tarjeta de acción rápida. */
+@Composable
+private fun ChargerDataCard(
+    priceText: String,
+    powerText: String,
+    currentType: com.pamoron.electroperico.domain.model.CurrentType,
+    onPriceChange: (String) -> Unit,
+    onPowerChange: (String) -> Unit,
+    onCurrentTypeChange: (com.pamoron.electroperico.domain.model.CurrentType) -> Unit,
+    onOpenCamera: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(stringResource(R.string.titulo_datos_cargador), style = MaterialTheme.typography.titleLarge)
+            OutlinedButton(onClick = onOpenCamera, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                Text(stringResource(R.string.accion_leer_con_camara))
+            }
+            NumberField(priceText, onPriceChange, R.string.campo_precio, stringResource(R.string.unidad_euro_kwh))
+            NumberField(powerText, onPowerChange, R.string.campo_potencia, stringResource(R.string.unidad_kw))
+            CurrentTypeSelector(currentType, onCurrentTypeChange)
+        }
     }
 }
 

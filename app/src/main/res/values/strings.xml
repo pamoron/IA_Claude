@@ -24,6 +24,7 @@
     <string name="cabecera_vehiculo">%1$s · %2$s útiles · Tocar para editar</string>
     <string name="campo_precio">Precio del cargador</string>
     <string name="campo_potencia">Potencia del cargador</string>
+    <string name="titulo_datos_cargador">Datos del cargador</string>
     <string name="campo_bateria_actual">Batería actual</string>
     <string name="campo_bateria_objetivo">Batería objetivo</string>
     <string name="corriente_ac">AC · Alterna</string>
@@ -40,6 +41,10 @@
     <string name="accion_borrar">Borrar</string>
     <string name="accion_intercambiar">Intercambiar batería actual y objetivo</string>
     <string name="accion_ajustes">Ajustes</string>
+    <string name="navegacion_calcular">Calcular</string>
+    <string name="navegacion_comparar">Comparar</string>
+    <string name="navegacion_historial">Historial</string>
+    <string name="navegacion_ajustes">Ajustes</string>
     <string name="accion_volver">Volver</string>
     <string name="accion_guardar">Guardar</string>
     <string name="accion_restaurar">Restaurar</string>

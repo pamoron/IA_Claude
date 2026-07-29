@@ -3,6 +3,7 @@ package com.pamoron.electroperico.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -12,6 +13,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 
 private val LightColors = lightColorScheme(
     primary = GreenPrimary,
@@ -22,6 +25,10 @@ private val LightColors = lightColorScheme(
     onSecondary = BlueOnSecondary,
     secondaryContainer = BlueSecondaryContainer,
     onSecondaryContainer = BlueOnSecondaryContainer,
+    tertiary = ElectricAccent,
+    onTertiary = OnElectricAccent,
+    tertiaryContainer = ElectricAccentContainer,
+    onTertiaryContainer = OnElectricAccentContainer,
     error = ErrorLight,
     onError = OnErrorLight,
     errorContainer = ErrorContainerLight,
@@ -44,6 +51,10 @@ private val DarkColors = darkColorScheme(
     onSecondary = BlueOnSecondaryDark,
     secondaryContainer = BlueSecondaryContainerDark,
     onSecondaryContainer = BlueOnSecondaryContainerDark,
+    tertiary = ElectricAccentDark,
+    onTertiary = OnElectricAccentDark,
+    tertiaryContainer = ElectricAccentContainerDark,
+    onTertiaryContainer = OnElectricAccentContainerDark,
     error = ErrorDark,
     onError = OnErrorDark,
     errorContainer = ErrorContainerDark,
@@ -98,6 +109,14 @@ private val DarkRatingColors = RatingColors(
 
 val LocalRatingColors = staticCompositionLocalOf { LightRatingColors }
 
+private val ElectroPericoShapes = Shapes(
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(32.dp),
+)
+
 /**
  * Tema de la aplicación, con soporte de modo claro y oscuro.
  *
@@ -107,7 +126,7 @@ val LocalRatingColors = staticCompositionLocalOf { LightRatingColors }
 @Composable
 fun ElectroPericoTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -125,6 +144,7 @@ fun ElectroPericoTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = ElectroPericoTypography,
+            shapes = ElectroPericoShapes,
             content = content,
         )
     }
